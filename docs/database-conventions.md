@@ -55,3 +55,22 @@ and accompanied by tests. The organisation foundation currently defines
 It uses unique `public_id` values, globally unique organisation codes,
 organisation-scoped branch codes and setting keys, and unique
 organisation-user pairs.
+
+The membership foundation adds `members`, `membership_number_sequences`,
+`member_status_histories`, `groups`, `group_memberships`, `member_contacts`, and
+`member_documents`. Membership/group codes are organisation-scoped. Nullable
+unique active keys preserve historical rows while preventing duplicate current
+user links, group memberships, and primary contacts. Beneficiary percentages
+use `decimal(5,2)` and application arithmetic converts them to integer basis
+points. Status history is append-only.
+
+Branch ancestry and restricted document morph types are validated in domain
+actions because portable relational constraints cannot fully express them.
+
+The contribution foundation adds `contribution_plans`,
+`member_plan_enrolments`, and `contribution_obligations`. Plan codes are unique
+per organisation. Nullable active-enrolment keys allow historical re-enrolment
+while preventing duplicate current enrolments. Obligation sequence numbers and
+due dates are unique within an enrolment. Expected amounts are immutable
+minor-unit snapshots; ending an enrolment cancels future obligations instead of
+deleting history.

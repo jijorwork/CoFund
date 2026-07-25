@@ -7,6 +7,7 @@ CoFund is an API-first, multi-organisation community-finance platform for susu, 
 ## Confirmed requirements
 
 - One person has one user account. A member record is separate from a login, and a person may be a member of multiple organisations.
+- Membership includes organisation-specific numbers, explicit lifecycle history, optional account linkage, groups, beneficiaries, next of kin, emergency contacts, and private supporting documents.
 - Organisations may contain multiple branches and groups.
 - A user may have multiple role assignments, differing by organisation and branch, and may switch active organisation, branch, role, and optionally group without signing out.
 - Every organisation-owned record is tenant-isolated. Active organisation context comes only from a verified assignment, never arbitrary request data.
@@ -20,6 +21,13 @@ CoFund is an API-first, multi-organisation community-finance platform for susu, 
 The first MVP establishes organisations, access context, members and beneficiaries, contribution plans and enrolments, the ledger and wallets, contribution collection, expenses, reconciliation, approvals, auditing, administration, and a hardened versioned API.
 
 The first MVP explicitly defers loans, Mobile Money, rotational payouts, offline collection, and advanced reporting. Their boundaries may be documented, but no MVP workflow should depend on them.
+
+The contribution-plan foundation supports regular, target, welfare, flexible,
+and rotational-susu definitions; rotational payout ordering and execution stay
+deferred. Fixed, member-selected, and flexible amount rules, enrolment approval,
+expected schedules, and staff position summaries are supported. Expected
+obligations represent planned contributions only; collection, allocation,
+receipts, balances, and accounting remain later phases.
 
 ## Product principles
 
@@ -36,4 +44,3 @@ The first MVP explicitly defers loans, Mobile Money, rotational payouts, offline
 - Retried write requests do not duplicate financial effects.
 - An authenticated user can safely select among only their active assignments.
 - The same domain actions serve the API and future administration UI.
-

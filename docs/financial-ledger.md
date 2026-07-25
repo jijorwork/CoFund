@@ -4,6 +4,11 @@
 
 The Accounting domain is the single source of truth for financial balances. Every completed financial event posts one immutable journal containing at least two lines, and total debits equal total credits for each currency. Wallets and account balances are derived projections; no feature may increment or decrement a stored balance directly.
 
+Contribution obligations are scheduled expectations outside the ledger.
+Creating or extending a schedule does not post a journal, create a wallet, or
+prove receipt of funds. A later allocation service may satisfy an obligation
+only from a real payment backed by its accounting posting.
+
 ## Core concepts
 
 - **Ledger account:** organisation-owned chart-of-accounts node with type (asset, liability, equity, income, expense) and currency policy.
@@ -38,4 +43,3 @@ Posted journals and completed source transactions are never edited or deleted. A
 ## Decisions still required
 
 Owner/accounting review is required for the initial chart of accounts, organisation-level account templates, cash-versus-accrual policy, supported currencies and precision, negative-wallet rules, posting-period close, approval thresholds, and exact postings for every transaction type.
-

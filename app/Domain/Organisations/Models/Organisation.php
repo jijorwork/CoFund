@@ -2,6 +2,11 @@
 
 namespace App\Domain\Organisations\Models;
 
+use App\Domain\Contributions\Models\ContributionPlan;
+use App\Domain\Contributions\Models\MemberPlanEnrolment;
+use App\Domain\Identity\Models\OrganisationUserRole;
+use App\Domain\Membership\Models\Group;
+use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Enums\OrganisationStatus;
 use App\Domain\Organisations\Enums\OrganisationType;
 use App\Models\User;
@@ -15,6 +20,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property OrganisationStatus $status
+ */
 #[Fillable([
     'public_id',
     'name',
@@ -93,6 +101,38 @@ class Organisation extends Model
     public function settings(): HasMany
     {
         return $this->hasMany(OrganisationSetting::class);
+    }
+
+    /**
+     * @return HasMany<OrganisationUserRole, $this>
+     */
+    public function userRoleAssignments(): HasMany
+    {
+        return $this->hasMany(OrganisationUserRole::class);
+    }
+
+    /** @return HasMany<Member, $this> */
+    public function members(): HasMany
+    {
+        return $this->hasMany(Member::class);
+    }
+
+    /** @return HasMany<Group, $this> */
+    public function groups(): HasMany
+    {
+        return $this->hasMany(Group::class);
+    }
+
+    /** @return HasMany<ContributionPlan, $this> */
+    public function contributionPlans(): HasMany
+    {
+        return $this->hasMany(ContributionPlan::class);
+    }
+
+    /** @return HasMany<MemberPlanEnrolment, $this> */
+    public function contributionEnrolments(): HasMany
+    {
+        return $this->hasMany(MemberPlanEnrolment::class);
     }
 
     /**

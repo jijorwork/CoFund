@@ -4,12 +4,13 @@
 
 At 2026-07-25 the repository runs Laravel Framework 13.22.0. `composer.json` requires PHP `^8.3` (the inspected CLI is PHP 8.4.23). It is a Laravel server-rendered starter using Livewire 4.3, Flux UI 2.15, Tailwind CSS 4, Vite 8, and Blade. Fortify provides session authentication, registration, password reset, email verification, confirmed two-factor authentication, and passkeys. Pest 4 and PHPUnit 12 are configured; feature tests use `RefreshDatabase` with SQLite, array cache/session, and the synchronous queue.
 
-The organisation foundation now adds `/api/v1/health`, an authenticated
-`/api/v1/context` diagnostic endpoint, organisations, branches, typed
-organisation settings, and the temporary role-free `organisation_users` access
-link. API authentication still uses the existing `web` session guard; there is
-no token authentication, authorization-role package, or administration
-framework.
+The foundation exposes `/api/v1/health`, an authenticated tenant diagnostic,
+context selection, assignable roles, and role-assignment administration.
+Organisations, branches, typed settings, and `organisation_users` access are
+implemented. API authentication uses the existing `web` session guard. Spatie
+Laravel Permission 8 defines global system roles, permissions, and their matrix;
+CoFund's `organisation_user_roles` table exclusively defines where a user may
+act. Token authentication and an administration framework are not installed.
 
 ## Architectural style
 
@@ -39,8 +40,8 @@ Use normal Laravel locations and domain subdirectories where valuable, for examp
 ## Cross-cutting request flow
 
 1. Authentication identifies the global user.
-2. Context middleware resolves the requested public selectors and verifies access. During the organisation foundation it checks an active `organisation_users` record; the next phase replaces this authorization decision with an active role assignment.
-3. The verified context is stored in a request-scoped immutable object and Laravel request context/log metadata.
+2. Tenant middleware resolves public selectors from the selected server-side session context (or explicit tenant headers for the diagnostic route) and verifies active organisation access.
+3. Role middleware reloads the selected assignment, verifies user, tenant, branch, status and dates, then stores the verified role in the scoped context and Laravel log context.
 4. Authorization policy checks the capability and resource ownership.
 5. A Form Request validates business input; it cannot supply authoritative organisation ownership.
 6. A domain action executes in a transaction, writes audit metadata, and posts ledger effects when applicable.
@@ -76,3 +77,47 @@ invalid or inaccessible selector, and is not global middleware.
 
 Organisation-domain code lives under `app/Domain/Organisations`; HTTP middleware,
 resources, and response formatting remain in `app/Http`.
+
+## Identity authorization foundation
+
+System role names and permission names are stable machine values. Labels are
+resolved by `SystemRole`; roles are not duplicated per organisation.
+`organisation_user_roles` records assignment history and uses a nullable unique
+active-scope key to prevent an exact active duplicate while allowing revoked
+history. Assignment and revocation actions are transactional and actor-stamped.
+Authorization checks permissions on the one verified active role only.
+
+Role definitions are treated as seeded system catalogue entries. The package's
+standard polymorphic tables exist for package lifecycle compatibility but are
+not an authorization source, and the `User` model does not use Spatie's role
+trait. CoFund exposes no direct model-role or model-permission assignment API.
+
+## Membership foundation
+
+Membership owns organisation-specific member identity, lifecycle, groups,
+contacts, private documents, and optional linkage to a global user. A member is
+never created merely because a user exists, and linking does not assign a role.
+All membership queries begin with verified organisation context and apply the
+active assignment's branch restriction. Organisation-wide roles may access all
+branches; branch-scoped roles cannot access branchless or other-branch records.
+
+Membership numbers use a per-organisation, per-year row-locked counter and the
+format `{ORGCODE}-{YYYY}-{000001}`. Status transitions are explicit actions and
+append immutable history. Beneficiaries, next of kin, and emergency contacts
+share one typed model while remaining independent roles. Documents use a
+restricted morph map and Laravel's private local disk; APIs never expose paths.
+Member and contact national-identification values are encrypted at rest and
+masked in API representations.
+
+## Contribution-plan foundation
+
+Contributions owns plan configuration, enrolment, deterministic expected
+schedules, and read-only position calculations. Plans may be organisation-wide,
+branch-specific, or group-specific. Branch roles see organisation-wide plans
+plus plans for their active branch; enrolments remain exactly branch scoped.
+
+Schedule-critical configuration is locked once pending, active, or suspended
+enrolments exist. Active enrolments generate bounded obligations under a row
+lock; reruns identify records by enrolment and due date. Approval-required
+enrolments have no schedule until a different actor approves them. Obligations
+are expectations, not financial transactions, and create no balance or posting.

@@ -2,6 +2,11 @@
 
 namespace App\Domain\Organisations\Models;
 
+use App\Domain\Contributions\Models\ContributionPlan;
+use App\Domain\Contributions\Models\MemberPlanEnrolment;
+use App\Domain\Identity\Models\OrganisationUserRole;
+use App\Domain\Membership\Models\Group;
+use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Enums\BranchStatus;
 use Database\Factories\Domain\Organisations\Models\BranchFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -10,8 +15,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property BranchStatus $status
+ */
 #[Fillable([
     'public_id',
     'organisation_id',
@@ -68,6 +77,38 @@ class Branch extends Model
     public function organisation(): BelongsTo
     {
         return $this->belongsTo(Organisation::class);
+    }
+
+    /**
+     * @return HasMany<OrganisationUserRole, $this>
+     */
+    public function userRoleAssignments(): HasMany
+    {
+        return $this->hasMany(OrganisationUserRole::class);
+    }
+
+    /** @return HasMany<Member, $this> */
+    public function members(): HasMany
+    {
+        return $this->hasMany(Member::class);
+    }
+
+    /** @return HasMany<Group, $this> */
+    public function groups(): HasMany
+    {
+        return $this->hasMany(Group::class);
+    }
+
+    /** @return HasMany<ContributionPlan, $this> */
+    public function contributionPlans(): HasMany
+    {
+        return $this->hasMany(ContributionPlan::class);
+    }
+
+    /** @return HasMany<MemberPlanEnrolment, $this> */
+    public function contributionEnrolments(): HasMany
+    {
+        return $this->hasMany(MemberPlanEnrolment::class);
     }
 
     /**

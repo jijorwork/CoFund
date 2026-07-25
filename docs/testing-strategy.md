@@ -24,6 +24,26 @@ The project uses Pest 4 with PHPUnit 12. Feature tests extend Laravel's test cas
 - Wallet projections can be rebuilt and reconcile exactly to the ledger.
 - APIs maintain status codes, error shape, pagination, filtering, and public-ID-only output.
 
+The identity foundation specifically tests idempotent authorization seeding and
+the role matrix; active, future, expired, suspended, and revoked assignments;
+organisation and branch ancestry; stale session invalidation; active-role-only
+permission checks; generic forbidden context errors; paginated scoped role
+assignment APIs; and separation of duties by user identity.
+
+Membership tests cover number allocation, lifecycle history, branch and tenant
+scope, protected profile fields, account-link uniqueness, historical group
+membership, beneficiary totals, nested-resource resolution, sensitive-field
+masking, permission boundaries, private uploads, downloads, and verification.
+Production-engine CI must additionally exercise concurrent number generation
+and beneficiary allocation under real row locking.
+
+Contribution coverage includes configuration and lifecycle validation;
+deterministic daily, weekly, monthly, one-time, and flexible schedules; horizon
+limits and rerun idempotency; enrolment eligibility and separation of duties;
+position semantics; UUID-only responses; permissions; and tenant/branch scope.
+Production-engine CI must prove concurrent schedule generation under real row
+locking and unique-index contention.
+
 ## Database compatibility
 
 SQLite remains fast for normal feature tests, but it cannot prove all production-engine constraints or locking behavior. Once the production database is approved, CI should add a targeted suite against that engine for transactions, row locks, indexes, constraints, JSON behavior, and concurrent idempotency.
@@ -31,4 +51,3 @@ SQLite remains fast for normal feature tests, but it cannot prove all production
 ## Delivery gate
 
 Every change adds or updates a Pest test and runs the narrowest relevant `php artisan test --compact` target. PHP changes also run `vendor/bin/pint --dirty --format agent`; meaningful backend changes run Larastan. Before release, run the full suite, static analysis, dependency audits, and production-engine integration tests.
-

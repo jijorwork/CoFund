@@ -3,11 +3,14 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Domain\Identity\Models\OrganisationUserRole;
+use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Models\Organisation;
 use App\Domain\Organisations\Models\OrganisationUser;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -37,7 +40,15 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 class User extends Authenticatable implements PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasFactory, HasUuids, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    /**
+     * @return list<string>
+     */
+    public function uniqueIds(): array
+    {
+        return ['public_id'];
+    }
 
     /**
      * @return BelongsToMany<Organisation, $this>
@@ -55,6 +66,20 @@ class User extends Authenticatable implements PasskeyUser
     public function organisationAccesses(): HasMany
     {
         return $this->hasMany(OrganisationUser::class);
+    }
+
+    /**
+     * @return HasMany<OrganisationUserRole, $this>
+     */
+    public function organisationRoleAssignments(): HasMany
+    {
+        return $this->hasMany(OrganisationUserRole::class);
+    }
+
+    /** @return HasMany<Member, $this> */
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(Member::class);
     }
 
     /**

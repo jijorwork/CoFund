@@ -28,7 +28,10 @@ class ResolveTenantContext
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        $organisationPublicId = $request->header('X-Organisation-ID');
+        $usesHeaderContext = $request->hasHeader('X-Organisation-ID');
+        $organisationPublicId = $usesHeaderContext
+            ? $request->header('X-Organisation-ID')
+            : $request->session()->get('active_context.organisation_public_id');
 
         if (! $user instanceof User || ! is_string($organisationPublicId)) {
             return $this->forbidden($request);
@@ -46,9 +49,12 @@ class ResolveTenantContext
             return $this->forbidden($request);
         }
 
-        $branch = $this->resolveBranch($request, $organisation);
+        $branchPublicId = $usesHeaderContext
+            ? $request->header('X-Branch-ID')
+            : $request->session()->get('active_context.branch_public_id');
+        $branch = $this->resolveBranch($branchPublicId, $organisation);
 
-        if ($request->hasHeader('X-Branch-ID') && $branch === null) {
+        if (is_string($branchPublicId) && $branch === null) {
             return $this->forbidden($request);
         }
 
@@ -75,10 +81,8 @@ class ResolveTenantContext
         }
     }
 
-    private function resolveBranch(Request $request, Organisation $organisation): ?Branch
+    private function resolveBranch(mixed $branchPublicId, Organisation $organisation): ?Branch
     {
-        $branchPublicId = $request->header('X-Branch-ID');
-
         if (! is_string($branchPublicId)) {
             return null;
         }

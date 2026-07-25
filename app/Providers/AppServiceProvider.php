@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Domain\Membership\Models\Member;
+use App\Domain\Membership\Models\MemberContact;
 use App\Domain\Organisations\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Relation::enforceMorphMap([
+            'member' => Member::class,
+            'member_contact' => MemberContact::class,
+        ]);
+
         $this->configureDefaults();
     }
 

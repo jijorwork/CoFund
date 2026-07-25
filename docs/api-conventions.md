@@ -4,8 +4,9 @@
 
 - All first-party business endpoints are rooted at `/api/v1`; route names use `api.v1.*`.
 - JSON is the only representation unless a dedicated export endpoint documents another type.
-- The eventual API authentication mechanism is undecided. Existing Fortify authentication is session-based; token authentication must be selected explicitly before API implementation.
-- Tenant context is selected through a documented context endpoint or context headers containing public identifiers, then verified against active assignments. Body/query `organisation_id`, `branch_id`, `role_id`, or `group_id` values never establish authority.
+- Current first-party API authentication uses Fortify's `web` session guard and CSRF protection. Token authentication for external clients remains undecided.
+- `GET /api/v1/auth/contexts` lists valid choices and `POST /api/v1/auth/context` selects exact organisation, optional branch, and assignment UUIDs. Body/query numeric ownership IDs never establish authority.
+- Staff routes run `web`, `auth`, tenant resolution, then role resolution. Health has no context middleware; context list/switch require authentication but no preselected role.
 
 ## Responses
 
@@ -49,6 +50,32 @@ Use `401` for unauthenticated, `403` for authenticated but unauthorized/context-
 - Use optimistic state checks or explicit workflow commands (`approve`, `post`, `reverse`) rather than generic status updates.
 - Sensitive mutations require authorization, audit metadata, and possibly approval before execution.
 
+## Membership API
+
+Membership endpoints use public UUID route parameters and live under
+`/api/v1/members` and `/api/v1/groups`. Nested contact and document resolution
+always starts from the scoped member. Lists use validated `filter[...]` values,
+an allow-listed `sort`, deterministic pagination of 25, and branch restrictions.
+Lifecycle changes use action endpoints instead of generic status updates.
+
+Member resources omit internal IDs and notes. National identifiers are masked
+when returned. Document resources expose metadata only; downloads are
+authorization-gated streams from private storage.
+
+## Code naming
+
+## Contribution API
+
+Plan routes live under `/api/v1/contribution-plans`; enrolments and their
+read-only schedules live under `/api/v1/contribution-enrolments`. Lifecycle
+changes use explicit action endpoints. Lists accept documented `filter[...]`
+values and allow-listed sorts, paginate at 25, and resolve UUIDs only within
+verified tenant and branch context.
+
+Amounts use integer `*_minor` values; plan resources also render decimal strings
+without floating-point arithmetic. Enrolment positions are expected-contribution
+summaries, not wallet balances. Clients cannot create obligations directly.
+
 ## Code naming
 
 - Controllers are singular (`ContributionController`) and thin.
@@ -56,4 +83,3 @@ Use `401` for unauthenticated, `403` for authenticated but unauthorized/context-
 - API Resources are singular (`ContributionResource`) with collection resources only when collection metadata differs.
 - Policies are singular model names (`ExpensePolicy`).
 - Actions use imperative intent (`RecordContribution`, `PostJournal`, `ReverseTransaction`); services name cohesive capabilities (`LedgerPostingService`) and are not generic repositories.
-
