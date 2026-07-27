@@ -128,3 +128,9 @@ cannot be expressed portably, including beneficiary totals, recognised
 liability limits, and prevention of overpayment. MySQL check-constraint and
 row-lock behaviour must be verified on the production database engine; SQLite
 tests do not prove those concurrency guarantees.
+
+Withdrawal products may be soft deleted only while history remains intact.
+Savings holds, submitted requests, terms, approvals, payouts, amendments, and
+receipts are historical records and are never hard deleted. Reservation and
+overpayment limits are enforced inside locked transactions because portable
+SQL constraints cannot express their aggregate invariants.

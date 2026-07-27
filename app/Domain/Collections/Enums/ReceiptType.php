@@ -8,4 +8,5 @@ enum ReceiptType: string
     case ContributionReversal = 'contribution_reversal';
     case LoanRepayment = 'loan_repayment';
     case WelfareBenefitPayment = 'welfare_benefit_payment';
+    case WithdrawalPayout = 'withdrawal_payout';
 }

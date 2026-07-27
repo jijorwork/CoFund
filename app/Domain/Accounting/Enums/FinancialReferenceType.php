@@ -8,6 +8,7 @@ enum FinancialReferenceType: string
     case Expense = 'expense';
     case Loan = 'loan';
     case WelfareClaim = 'welfare_claim';
+    case WithdrawalRequest = 'withdrawal_request';
     case OpeningBalance = 'opening_balance';
     case Adjustment = 'adjustment';
     case Transaction = 'transaction';

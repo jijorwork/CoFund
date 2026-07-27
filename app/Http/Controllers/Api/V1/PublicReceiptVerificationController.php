@@ -14,7 +14,7 @@ class PublicReceiptVerificationController extends Controller
     {
         $hash = hash('sha256', $verificationCode);
         $receipt = Receipt::query()
-            ->with(['organisation', 'member', 'payment', 'loanRepayment', 'welfareBenefitPayment', 'financialTransaction'])
+            ->with(['organisation', 'member', 'payment', 'loanRepayment', 'welfareBenefitPayment', 'withdrawalPayout', 'financialTransaction'])
             ->where('verification_hash', $hash)
             ->first();
 
@@ -29,7 +29,8 @@ class PublicReceiptVerificationController extends Controller
             'payment_date' => (match (true) {
                 $receipt->contribution_payment_id !== null => $receipt->payment->payment_date,
                 $receipt->loan_repayment_id !== null => $receipt->loanRepayment->repayment_date,
-                default => $receipt->welfareBenefitPayment->payment_date,
+                $receipt->welfare_benefit_payment_id !== null => $receipt->welfareBenefitPayment->payment_date,
+                default => $receipt->withdrawalPayout->payout_date,
             })->toDateString(),
             'amount_minor' => $receipt->amount_minor,
             'currency_code' => $receipt->currency_code,

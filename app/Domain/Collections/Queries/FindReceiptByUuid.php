@@ -14,7 +14,7 @@ class FindReceiptByUuid
         $query = Receipt::query()
             ->whereBelongsTo($this->context->organisation())
             ->where('public_id', $uuid)
-            ->with(['organisation', 'branch', 'member', 'issuedBy', 'payment', 'loanRepayment', 'welfareBenefitPayment.claim', 'financialTransaction']);
+            ->with(['organisation', 'branch', 'member', 'issuedBy', 'payment', 'loanRepayment', 'welfareBenefitPayment.claim', 'withdrawalPayout.request.product', 'financialTransaction']);
 
         if ($this->context->roleAssignment()->branch_id !== null) {
             $query->where('branch_id', $this->context->branch()?->getKey());

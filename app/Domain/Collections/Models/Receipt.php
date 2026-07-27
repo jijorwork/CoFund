@@ -10,6 +10,7 @@ use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Models\Branch;
 use App\Domain\Organisations\Models\Organisation;
 use App\Domain\Welfare\Models\WelfareBenefitPayment;
+use App\Domain\Withdrawals\Models\WithdrawalPayout;
 use App\Models\User;
 use Database\Factories\Domain\Collections\Models\ReceiptFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -27,7 +28,7 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed>|null $metadata
  */
 #[Fillable([
-    'public_id', 'organisation_id', 'branch_id', 'contribution_payment_id', 'loan_repayment_id', 'welfare_benefit_payment_id',
+    'public_id', 'organisation_id', 'branch_id', 'contribution_payment_id', 'loan_repayment_id', 'welfare_benefit_payment_id', 'withdrawal_payout_id',
     'financial_transaction_id', 'receipt_number', 'receipt_type', 'status',
     'issued_at', 'issued_by_user_id', 'member_id', 'payer_name', 'payment_method',
     'amount_minor', 'currency_code', 'verification_code', 'verification_hash',
@@ -87,6 +88,12 @@ class Receipt extends Model
     public function welfareBenefitPayment(): BelongsTo
     {
         return $this->belongsTo(WelfareBenefitPayment::class);
+    }
+
+    /** @return BelongsTo<WithdrawalPayout, $this> */
+    public function withdrawalPayout(): BelongsTo
+    {
+        return $this->belongsTo(WithdrawalPayout::class);
     }
 
     /** @return BelongsTo<FinancialTransaction, $this> */

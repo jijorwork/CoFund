@@ -107,3 +107,8 @@ are explicit role contexts. Maker-checker rules compare user identity across
 claim creation, review, verification, and approval, so switching roles cannot
 bypass separation of duties. Treasury payment and reversal permissions remain
 separate from claim approval.
+
+Withdrawal products may be organisation-wide or branch/group restricted.
+Every hold, request, payout, and report is organisation-scoped and branch-aware.
+Creator, reviewer, primary approver, and secondary approver separation compares
+user identity. Payout authority remains separate from approval authority.

@@ -28,4 +28,5 @@ enum AccountPurpose: string
     case StaffReimbursementPayable = 'staff_reimbursement_payable';
     case WelfareClaimsPayable = 'welfare_claims_payable';
     case WelfareBenefitExpense = 'welfare_benefit_expense';
+    case WithdrawalFeeIncome = 'withdrawal_fee_income';
 }

@@ -151,3 +151,10 @@ allocations, and digital receipts. It calls Accounting once per payment and
 never creates ledger entries directly. Allocation changes satisfaction only
 after that posting succeeds. Source-wallet resolution belongs to Collections;
 external provider intents and callbacks remain in the deferred Payments domain.
+
+## Savings withdrawals
+
+Withdrawals owns savings availability, holds, requests, approvals, payouts,
+and reversals. It consumes ledger-derived wallet balances and authoritative
+loan/welfare records without taking ownership of them. Only payout delegates
+financial movement to Accounting.

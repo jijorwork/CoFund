@@ -7,6 +7,7 @@ enum SystemRole: string
     case PlatformAdmin = 'platform_admin';
     case OrganisationAdmin = 'organisation_admin';
     case BranchManager = 'branch_manager';
+    case MembershipOfficer = 'membership_officer';
     case Treasurer = 'treasurer';
     case Collector = 'collector';
     case LoanOfficer = 'loan_officer';
@@ -22,6 +23,7 @@ enum SystemRole: string
             self::PlatformAdmin => 'Platform Administrator',
             self::OrganisationAdmin => 'Organisation Administrator',
             self::BranchManager => 'Branch Manager',
+            self::MembershipOfficer => 'Membership Officer',
             self::Treasurer => 'Treasurer',
             self::Collector => 'Collector',
             self::LoanOfficer => 'Loan Officer',

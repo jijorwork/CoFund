@@ -103,3 +103,9 @@ privacy, branch/organisation isolation, and aggregate reports. Financial tests
 must assert both business state and balanced ledger entries. Production-engine
 tests remain necessary for MySQL row locking and concurrent sequence/payment
 contention.
+
+Phase 11 coverage targets ledger-derived savings, holds, restriction
+explanations, integer fee arithmetic, reservation rollback, approval
+separation, balanced payout entries, partial-fee reconciliation, idempotency,
+reversals, receipt privacy, tenant isolation, and reports. Production-engine
+tests remain required for concurrent submission and payout contention.

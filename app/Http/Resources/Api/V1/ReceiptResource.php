@@ -22,6 +22,7 @@ class ReceiptResource extends JsonResource
             'payment' => $this->payment === null ? null : ['uuid' => $this->payment->public_id, 'payment_number' => $this->payment->payment_number],
             'loan_repayment' => $this->loanRepayment === null ? null : ['uuid' => $this->loanRepayment->public_id, 'repayment_number' => $this->loanRepayment->repayment_number],
             'welfare_benefit_payment' => $this->welfareBenefitPayment === null ? null : ['uuid' => $this->welfareBenefitPayment->public_id, 'payment_number' => $this->welfareBenefitPayment->payment_number],
+            'withdrawal_payout' => $this->withdrawalPayout === null ? null : ['uuid' => $this->withdrawalPayout->public_id, 'payout_number' => $this->withdrawalPayout->payout_number],
             'transaction' => [
                 'uuid' => $this->financialTransaction->public_id,
                 'transaction_number' => $this->financialTransaction->transaction_number,

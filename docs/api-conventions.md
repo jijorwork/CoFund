@@ -152,3 +152,8 @@ Welfare financial commands require `Idempotency-Key`. Welfare routes expose
 public UUIDs only and resolve all records within the verified active
 organisation and, where applicable, active branch. Private document storage
 paths and sensitive beneficiary identifiers are never returned.
+
+Withdrawal payout and reversal commands require `Idempotency-Key`. Clients
+provide public wallet UUIDs and gross minor-unit amounts; ledger account IDs,
+workflow state, approval actors, restriction internals, and fingerprints are
+never accepted or exposed.

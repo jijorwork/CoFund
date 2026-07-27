@@ -58,10 +58,10 @@ test('default chart is complete idempotent and uses organisation currency', func
     ]);
     $second = $action->handle($organisation, $actor);
 
-    expect($first)->toHaveCount(28)
-        ->and($second)->toHaveCount(28)
-        ->and(LedgerAccount::query()->whereBelongsTo($organisation)->count())->toBe(28)
-        ->and(LedgerAccount::query()->whereBelongsTo($organisation)->pluck('code')->unique())->toHaveCount(28)
+    expect($first)->toHaveCount(29)
+        ->and($second)->toHaveCount(29)
+        ->and(LedgerAccount::query()->whereBelongsTo($organisation)->count())->toBe(29)
+        ->and(LedgerAccount::query()->whereBelongsTo($organisation)->pluck('code')->unique())->toHaveCount(29)
         ->and(LedgerAccount::query()->whereBelongsTo($organisation)->pluck('currency_code')->unique()->all())->toBe(['GHS'])
         ->and(LedgerAccount::query()->whereBelongsTo($organisation)->where('code', '1100')->value('description'))
         ->toBe('Owner supplied description')

@@ -145,6 +145,16 @@ exact compensating transactions; active payments must be reversed before their
 liability can be reversed. Eligibility evaluation, submission, review, and
 verification do not create financial transactions.
 
+## Savings withdrawal accounting
+
+A withdrawal request, review, reservation, and approval are non-accounting
+events. A posted payout debits the member savings liability for the gross
+withdrawal. It credits the destination asset wallet for the net payout and
+credits withdrawal fee income for any fee deducted. Partial payouts allocate
+the approved fee proportionally; the final payout absorbs integer-rounding
+residuals. Reversals use the central compensating-transaction service and
+restore the member savings liability.
+
 ## Decisions still required
 
 Owner/accounting review is required for approval of the initial chart, whether

@@ -70,3 +70,13 @@ payments, receipts, reversals, and operational reports. Calculations use minor
 units and basis points. External provider integrations, automated medical
 verification, payout callbacks, notifications, and payroll deductions remain
 deferred.
+
+## Phase 11 savings-withdrawal scope
+
+Organisations may configure withdrawal products and reasons, place
+non-accounting savings holds, calculate ledger-derived availability, enforce
+loan/guarantor/welfare/contribution restrictions, approve requests, and post
+full or partial payouts with receipts and reversals. Requested amount is the
+gross savings reduction; net payout is gross less deducted fee. Provider
+callbacks, member-exit processing, debt set-off, notifications, administration
+UI, and frontend pages remain deferred.

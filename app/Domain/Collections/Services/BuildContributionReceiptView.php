@@ -10,6 +10,9 @@ class BuildContributionReceiptView
     /** @return array<string, mixed> */
     public function build(Receipt $receipt): array
     {
+        if ($receipt->withdrawal_payout_id !== null) {
+            return $this->buildWithdrawalPayout($receipt);
+        }
         if ($receipt->welfare_benefit_payment_id !== null) {
             return $this->buildWelfareBenefitPayment($receipt);
         }
@@ -57,6 +60,15 @@ class BuildContributionReceiptView
             'verification_code' => $receipt->verification_code,
             'status' => $receipt->status->value,
         ];
+    }
+
+    /** @return array<string, mixed> */
+    private function buildWithdrawalPayout(Receipt $receipt): array
+    {
+        $receipt->loadMissing(['organisation', 'branch', 'member', 'issuedBy', 'withdrawalPayout.request.product', 'withdrawalPayout.request.reason', 'financialTransaction']);
+        $payout = $receipt->withdrawalPayout;
+
+        return ['organisation' => ['name' => $receipt->organisation->name], 'branch' => $receipt->branch === null ? null : ['name' => $receipt->branch->name, 'code' => $receipt->branch->code], 'receipt_number' => $receipt->receipt_number, 'transaction_number' => $receipt->financialTransaction->transaction_number, 'member' => ['name' => $receipt->member->fullName(), 'membership_number' => $receipt->member->membership_number], 'withdrawal_request' => ['uuid' => $payout->request->public_id, 'request_number' => $payout->request->request_number, 'product' => $payout->request->product->name, 'reason' => $payout->request->reason?->name], 'withdrawal_payout' => ['uuid' => $payout->public_id, 'payout_number' => $payout->payout_number, 'date' => $payout->payout_date->toDateString(), 'gross_minor' => $payout->gross_withdrawal_minor, 'fee_minor' => $payout->fee_minor, 'net_minor' => $payout->net_payout_minor, 'recipient_name' => $payout->recipient_name], 'payment_method' => $receipt->payment_method, 'amount_minor' => $receipt->amount_minor, 'amount_formatted' => $this->formatMoney($receipt->amount_minor, $receipt->currency_code), 'received_by' => $receipt->issuedBy->name, 'verification_code' => $receipt->verification_code, 'status' => $receipt->status->value];
     }
 
     /** @return array<string, mixed> */

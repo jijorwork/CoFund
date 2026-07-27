@@ -25,7 +25,7 @@ class ReceiptController extends Controller
         $filters = $request->validated('filter', []);
         $query = Receipt::query()
             ->whereBelongsTo($context->organisation())
-            ->with(['member', 'payment', 'loanRepayment', 'welfareBenefitPayment', 'financialTransaction'])
+            ->with(['member', 'payment', 'loanRepayment', 'welfareBenefitPayment', 'withdrawalPayout', 'financialTransaction'])
             ->latest('issued_at');
 
         if ($context->roleAssignment()->branch_id !== null) {

@@ -72,6 +72,7 @@ class CreateDefaultChartOfAccounts
             ['code' => '4300', 'name' => 'Loan Interest Income', 'category' => AccountCategory::Income, 'purpose' => AccountPurpose::LoanInterestIncome, 'allows_direct_posting' => true],
             ['code' => '4400', 'name' => 'Loan Fee Income', 'category' => AccountCategory::Income, 'purpose' => AccountPurpose::LoanFeeIncome, 'allows_direct_posting' => true],
             ['code' => '4500', 'name' => 'Loan Penalty Income', 'category' => AccountCategory::Income, 'purpose' => AccountPurpose::LoanPenaltyIncome, 'allows_direct_posting' => true],
+            ['code' => '4600', 'name' => 'Withdrawal Fee Income', 'category' => AccountCategory::Income, 'purpose' => AccountPurpose::WithdrawalFeeIncome, 'allows_direct_posting' => true],
             ['code' => '5000', 'name' => 'Operating Expenses', 'category' => AccountCategory::Expense, 'purpose' => AccountPurpose::OperatingExpense, 'allows_direct_posting' => true],
             ['code' => '5100', 'name' => 'Transaction Charges', 'category' => AccountCategory::Expense, 'purpose' => AccountPurpose::OperatingExpense, 'allows_direct_posting' => true],
             ['code' => '5200', 'name' => 'Other Expenses', 'category' => AccountCategory::Expense, 'purpose' => AccountPurpose::Other, 'allows_direct_posting' => true],

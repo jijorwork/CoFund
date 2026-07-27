@@ -49,6 +49,7 @@ use App\Http\Controllers\Api\V1\ReverseFinancialTransactionController;
 use App\Http\Controllers\Api\V1\RevokeRoleAssignmentController;
 use App\Http\Controllers\Api\V1\RoleAssignmentController;
 use App\Http\Controllers\Api\V1\RoleController;
+use App\Http\Controllers\Api\V1\SavingsHoldController;
 use App\Http\Controllers\Api\V1\TrialBalanceController;
 use App\Http\Controllers\Api\V1\WalletBalanceController;
 use App\Http\Controllers\Api\V1\WalletController;
@@ -61,6 +62,12 @@ use App\Http\Controllers\Api\V1\WelfareEventTypeController;
 use App\Http\Controllers\Api\V1\WelfarePaymentController;
 use App\Http\Controllers\Api\V1\WelfareProductController;
 use App\Http\Controllers\Api\V1\WelfareReportController;
+use App\Http\Controllers\Api\V1\WithdrawableSavingsController;
+use App\Http\Controllers\Api\V1\WithdrawalPayoutController;
+use App\Http\Controllers\Api\V1\WithdrawalProductController;
+use App\Http\Controllers\Api\V1\WithdrawalReasonController;
+use App\Http\Controllers\Api\V1\WithdrawalReportController;
+use App\Http\Controllers\Api\V1\WithdrawalRequestController;
 use App\Http\Requests\Api\V1\LoanDecisionRequest;
 use App\Http\Resources\Api\V1\TenantContextResource;
 use App\Http\Responses\ApiResponse;
@@ -398,6 +405,42 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::get('reports/welfare-product-performance', [WelfareReportController::class, 'productPerformance'])->name('reports.welfare-product-performance');
                 Route::get('reports/welfare-beneficiary-payments', [WelfareReportController::class, 'beneficiaryPayments'])->name('reports.welfare-beneficiary-payments');
                 Route::get('reports/welfare-eligibility-rejections', [WelfareReportController::class, 'eligibilityRejections'])->name('reports.welfare-eligibility-rejections');
+
+                Route::apiResource('withdrawal-products', WithdrawalProductController::class)->parameters(['withdrawal-products' => 'productUuid'])->except(['destroy']);
+                foreach (['activate', 'suspend', 'reinstate', 'close', 'archive'] as $transition) {
+                    Route::post("withdrawal-products/{productUuid}/{$transition}", [WithdrawalProductController::class, 'transition'])->defaults('transition', $transition)->name("withdrawal-products.{$transition}");
+                }
+                Route::apiResource('withdrawal-reasons', WithdrawalReasonController::class)->parameters(['withdrawal-reasons' => 'reasonUuid'])->except(['destroy']);
+                Route::get('savings-holds', [SavingsHoldController::class, 'index'])->name('savings-holds.index');
+                Route::post('savings-holds', [SavingsHoldController::class, 'store'])->name('savings-holds.store');
+                Route::get('savings-holds/{holdUuid}', [SavingsHoldController::class, 'show'])->name('savings-holds.show');
+                Route::post('savings-holds/{holdUuid}/release', [SavingsHoldController::class, 'release'])->name('savings-holds.release');
+                foreach (['approve', 'cancel'] as $transition) {
+                    Route::post("savings-holds/{holdUuid}/{$transition}", [SavingsHoldController::class, 'transition'])->defaults('transition', $transition)->name("savings-holds.{$transition}");
+                }
+                Route::get('members/{memberUuid}/withdrawable-savings', WithdrawableSavingsController::class)->name('members.withdrawable-savings');
+                Route::get('withdrawal-requests', [WithdrawalRequestController::class, 'index'])->name('withdrawal-requests.index');
+                Route::post('withdrawal-requests', [WithdrawalRequestController::class, 'store'])->name('withdrawal-requests.store');
+                Route::get('withdrawal-requests/{requestUuid}', [WithdrawalRequestController::class, 'show'])->name('withdrawal-requests.show');
+                Route::get('withdrawal-requests/{requestUuid}/eligibility', [WithdrawalRequestController::class, 'eligibility'])->name('withdrawal-requests.eligibility');
+                Route::get('withdrawal-requests/{requestUuid}/position', [WithdrawalRequestController::class, 'position'])->name('withdrawal-requests.position');
+                foreach (['submit', 'review', 'approve', 'secondary-approve', 'reject', 'cancel', 'settle'] as $transition) {
+                    Route::post("withdrawal-requests/{requestUuid}/{$transition}", [WithdrawalRequestController::class, 'workflow'])->defaults('transition', $transition)->name("withdrawal-requests.{$transition}");
+                }
+                Route::get('withdrawal-payouts', [WithdrawalPayoutController::class, 'index'])->name('withdrawal-payouts.index');
+                Route::post('withdrawal-requests/{requestUuid}/payouts', [WithdrawalPayoutController::class, 'store'])->name('withdrawal-requests.payouts.store');
+                Route::get('withdrawal-payouts/{payoutUuid}', [WithdrawalPayoutController::class, 'show'])->name('withdrawal-payouts.show');
+                Route::post('withdrawal-payouts/{payoutUuid}/reverse', [WithdrawalPayoutController::class, 'reverse'])->name('withdrawal-payouts.reverse');
+                Route::get('members/{memberUuid}/withdrawal-requests', [WithdrawalReportController::class, 'memberRequests'])->name('members.withdrawal-requests.index');
+                Route::get('members/{memberUuid}/withdrawal-summary', [WithdrawalReportController::class, 'memberSummary'])->name('members.withdrawal-summary');
+                Route::get('reports/withdrawal-requests', [WithdrawalReportController::class, 'requests'])->name('reports.withdrawal-requests');
+                Route::get('reports/withdrawal-payouts', [WithdrawalReportController::class, 'payouts'])->name('reports.withdrawal-payouts');
+                Route::get('reports/withdrawal-fees', [WithdrawalReportController::class, 'fees'])->name('reports.withdrawal-fees');
+                Route::get('reports/outstanding-withdrawals', [WithdrawalReportController::class, 'outstanding'])->name('reports.outstanding-withdrawals');
+                Route::get('reports/savings-holds', [WithdrawalReportController::class, 'holds'])->name('reports.savings-holds');
+                Route::get('reports/withdrawal-rejections', [WithdrawalReportController::class, 'rejections'])->name('reports.withdrawal-rejections');
+                Route::get('reports/withdrawal-restrictions', [WithdrawalReportController::class, 'restrictions'])->name('reports.withdrawal-restrictions');
+                Route::get('reports/withdrawal-product-performance', [WithdrawalReportController::class, 'productPerformance'])->name('reports.withdrawal-product-performance');
             });
         });
     });
