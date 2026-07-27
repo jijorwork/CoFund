@@ -1,10 +1,15 @@
 <?php
 
+use App\Domain\Accounting\Exceptions\InvalidFinancialOperation;
+use App\Domain\Collections\Exceptions\InvalidContributionPayment;
 use App\Domain\Contributions\Exceptions\InvalidContributionOperation;
+use App\Domain\Expenses\Exceptions\InvalidExpenseOperation;
 use App\Domain\Identity\Exceptions\InvalidRoleAssignment;
 use App\Domain\Identity\Exceptions\InvalidRoleContext;
 use App\Domain\Identity\Exceptions\PermissionDenied;
+use App\Domain\Loans\Exceptions\InvalidLoanOperation;
 use App\Domain\Membership\Exceptions\InvalidMembershipOperation;
+use App\Domain\Wallets\Exceptions\InvalidWalletOperation;
 use App\Http\Middleware\EnsureApiRequestId;
 use App\Http\Middleware\ResolveRoleContext;
 use App\Http\Middleware\ResolveTenantContext;
@@ -139,6 +144,51 @@ return Application::configure(basePath: dirname(__DIR__))
                 request: $request,
                 code: 'contribution_operation_invalid',
                 message: 'The contribution operation could not be completed.',
+                status: 422,
+            );
+        });
+
+        $exceptions->render(function (InvalidContributionPayment $exception, Request $request) {
+            return ApiResponse::error(
+                request: $request,
+                code: 'contribution_payment_invalid',
+                message: $exception->getMessage(),
+                status: 422,
+            );
+        });
+
+        $exceptions->render(function (InvalidFinancialOperation $exception, Request $request) {
+            return ApiResponse::error(
+                request: $request,
+                code: 'financial_operation_invalid',
+                message: 'The financial operation could not be completed.',
+                status: 422,
+            );
+        });
+
+        $exceptions->render(function (InvalidExpenseOperation $exception, Request $request) {
+            return ApiResponse::error(
+                request: $request,
+                code: 'expense_operation_invalid',
+                message: $exception->getMessage() ?: 'The expense operation could not be completed.',
+                status: 422,
+            );
+        });
+
+        $exceptions->render(function (InvalidLoanOperation $exception, Request $request) {
+            return ApiResponse::error(
+                request: $request,
+                code: 'loan_operation_invalid',
+                message: $exception->getMessage(),
+                status: 422,
+            );
+        });
+
+        $exceptions->render(function (InvalidWalletOperation $exception, Request $request) {
+            return ApiResponse::error(
+                request: $request,
+                code: 'wallet_operation_invalid',
+                message: 'The wallet operation could not be completed.',
                 status: 422,
             );
         });

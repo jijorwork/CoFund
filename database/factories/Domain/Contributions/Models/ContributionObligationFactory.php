@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Domain\Contributions\Models;
 
+use App\Domain\Contributions\Enums\ObligationSatisfactionStatus;
 use App\Domain\Contributions\Enums\ObligationStatus;
 use App\Domain\Contributions\Models\ContributionObligation;
 use App\Domain\Contributions\Models\MemberPlanEnrolment;
@@ -26,7 +27,8 @@ class ContributionObligationFactory extends Factory
             'due_date' => now()->toDateString(),
             'expected_amount_minor' => 10000,
             'currency_code' => 'GHS',
-            'status' => ObligationStatus::Due,
+            'schedule_status' => ObligationStatus::Due,
+            'satisfaction_status' => ObligationSatisfactionStatus::Unsatisfied,
             'grace_due_date' => now()->addDays(3)->toDateString(),
             'satisfied_amount_minor' => 0,
             'outstanding_amount_minor' => 10000,
@@ -36,22 +38,22 @@ class ContributionObligationFactory extends Factory
 
     public function upcoming(): static
     {
-        return $this->state(fn (): array => ['status' => ObligationStatus::Upcoming, 'due_date' => now()->addWeek()]);
+        return $this->state(fn (): array => ['schedule_status' => ObligationStatus::Upcoming, 'due_date' => now()->addWeek()]);
     }
 
     public function due(): static
     {
-        return $this->state(fn (): array => ['status' => ObligationStatus::Due, 'due_date' => now()]);
+        return $this->state(fn (): array => ['schedule_status' => ObligationStatus::Due, 'due_date' => now()]);
     }
 
     public function overdue(): static
     {
-        return $this->state(fn (): array => ['status' => ObligationStatus::Overdue, 'due_date' => now()->subWeek(), 'grace_due_date' => now()->subDay()]);
+        return $this->state(fn (): array => ['schedule_status' => ObligationStatus::Overdue, 'due_date' => now()->subWeek(), 'grace_due_date' => now()->subDay()]);
     }
 
     public function cancelled(): static
     {
-        return $this->state(fn (): array => ['status' => ObligationStatus::Cancelled]);
+        return $this->state(fn (): array => ['schedule_status' => ObligationStatus::Cancelled]);
     }
 
     public function daily(): static

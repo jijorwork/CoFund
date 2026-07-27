@@ -47,15 +47,15 @@ class ListContributionSchedule
         match ($status) {
             ObligationStatus::Upcoming->value => $query
                 ->whereDate('due_date', '>', $today)
-                ->where('status', '!=', ObligationStatus::Cancelled),
+                ->where('schedule_status', '!=', ObligationStatus::Cancelled),
             ObligationStatus::Due->value => $query
                 ->whereDate('due_date', '<=', $today)
                 ->whereDate('grace_due_date', '>=', $today)
-                ->where('status', '!=', ObligationStatus::Cancelled),
+                ->where('schedule_status', '!=', ObligationStatus::Cancelled),
             ObligationStatus::Overdue->value => $query
                 ->whereDate('grace_due_date', '<', $today)
                 ->where('outstanding_amount_minor', '>', 0)
-                ->where('status', '!=', ObligationStatus::Cancelled),
+                ->where('schedule_status', '!=', ObligationStatus::Cancelled),
             default => $query->where('status', $status),
         };
     }

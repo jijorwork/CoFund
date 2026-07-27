@@ -2,6 +2,9 @@
 
 namespace App\Domain\Organisations\Models;
 
+use App\Domain\Accounting\Models\AccountingPeriod;
+use App\Domain\Accounting\Models\FinancialTransaction;
+use App\Domain\Accounting\Models\LedgerAccount;
 use App\Domain\Contributions\Models\ContributionPlan;
 use App\Domain\Contributions\Models\MemberPlanEnrolment;
 use App\Domain\Identity\Models\OrganisationUserRole;
@@ -9,6 +12,7 @@ use App\Domain\Membership\Models\Group;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Enums\OrganisationStatus;
 use App\Domain\Organisations\Enums\OrganisationType;
+use App\Domain\Wallets\Models\Wallet;
 use App\Models\User;
 use Database\Factories\Domain\Organisations\Models\OrganisationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -133,6 +137,30 @@ class Organisation extends Model
     public function contributionEnrolments(): HasMany
     {
         return $this->hasMany(MemberPlanEnrolment::class);
+    }
+
+    /** @return HasMany<LedgerAccount, $this> */
+    public function ledgerAccounts(): HasMany
+    {
+        return $this->hasMany(LedgerAccount::class);
+    }
+
+    /** @return HasMany<FinancialTransaction, $this> */
+    public function financialTransactions(): HasMany
+    {
+        return $this->hasMany(FinancialTransaction::class);
+    }
+
+    /** @return HasMany<Wallet, $this> */
+    public function wallets(): HasMany
+    {
+        return $this->hasMany(Wallet::class);
+    }
+
+    /** @return HasMany<AccountingPeriod, $this> */
+    public function accountingPeriods(): HasMany
+    {
+        return $this->hasMany(AccountingPeriod::class);
     }
 
     /**

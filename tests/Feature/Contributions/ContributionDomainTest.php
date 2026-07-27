@@ -146,6 +146,6 @@ test('ending an enrolment preserves due obligations and cancels only future ones
     );
 
     expect($enrolment->refresh()->status)->toBe(EnrolmentStatus::Ended)
-        ->and($enrolment->obligations()->whereDate('due_date', '<=', '2026-07-26')->where('status', '!=', 'cancelled')->count())->toBe(2)
-        ->and($enrolment->obligations()->whereDate('due_date', '>', '2026-07-26')->where('status', 'cancelled')->count())->toBe(58);
+        ->and($enrolment->obligations()->whereDate('due_date', '<=', '2026-07-26')->where('schedule_status', '!=', 'cancelled')->count())->toBe(2)
+        ->and($enrolment->obligations()->whereDate('due_date', '>', '2026-07-26')->where('schedule_status', 'cancelled')->count())->toBe(58);
 });

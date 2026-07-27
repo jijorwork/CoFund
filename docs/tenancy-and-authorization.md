@@ -1,5 +1,24 @@
 # Tenancy and Authorization
 
+## Expense authorization
+
+Expense access begins with verified organisation and branch context.
+Requesters cannot approve themselves or satisfy multiple distinct levels.
+Payment, reversal, disbursement, and retirement review use focused
+permissions. Auditors are read-only; members have no expense permissions.
+
+## Cash custody authorization
+
+Every session, declaration, handover, variance, and deposit resolves inside the
+verified active organisation and, for branch assignments, active branch.
+Collector actions are restricted to the authenticated collector's own user and
+wallet. Request ownership identifiers never establish authority.
+
+Receivers, approvers, confirmers, variance resolvers, and write-off actors need
+specific permissions. Maker-checker transitions reject the originating actor
+where separation applies. Organisation administrators have read-only
+reconciliation visibility under the current seed policy.
+
 ## Identity model
 
 `User` is a global login. A person/member profile is a separate domain record and may participate in multiple organisations. Authorization comes from active role assignments, not from a role column on users.
@@ -64,6 +83,13 @@ contribution summaries require an exact active-branch match. Group-specific
 plans additionally require compatible branch ancestry and the member's active
 membership in that group.
 
+Collection queries inherit member and enrolment scope. Branch roles see only
+payments compatible with their active branch. Collector context additionally
+restricts cash collection to an active collector wallet owned by the
+authenticated actor and defaults payment and receipt views to that actor.
+Collectors cannot record bank/manual-Mobile-Money payments, reverse payments,
+choose ledger accounts, or use generic posting.
+
 ## Audit metadata
 
 Sensitive actions capture request ID, organisation/branch/group, role assignment, actor user, impersonator/support actor if any, action, subject type/public ID, timestamp, source channel, IP/user agent where appropriate, reason, approval reference, and before/after changes with secrets redacted. Audit events are append-only and access-controlled.
@@ -74,3 +100,10 @@ Confirm how group-level permissions behave, which token authentication mechanism
 future third-party/mobile clients use, and whether audited platform-support
 impersonation is permitted. System roles are platform templates for this phase;
 organisation-defined roles remain deferred.
+Welfare products may be organisation-wide or restricted to a branch/group.
+Enrolments, events, claims, documents, liabilities, payments, and reports are
+always queried within verified active context. Welfare Officer and Verifier
+are explicit role contexts. Maker-checker rules compare user identity across
+claim creation, review, verification, and approval, so switching roles cannot
+bypass separation of duties. Treasury payment and reversal permissions remain
+separate from claim approval.

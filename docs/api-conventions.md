@@ -1,5 +1,29 @@
 # API Conventions
 
+## Expense APIs
+
+Categories, requests, evidence, payments, advances, retirements, and reports
+live under `/api/v1`. Financial commands require `Idempotency-Key`. Resources
+expose UUIDs and minor units, never internal IDs, raw paths, fingerprints, or
+ledger-account IDs.
+
+## Reconciliation endpoints
+
+The authenticated `/api/v1` surface includes collector sessions, cash
+handovers, cash variances, cash deposits, and collection reports. Lifecycle
+commands use explicit actions such as `close`, `declare-cash`, `submit`,
+`receive`, `approve`, `confirm`, `reject`, `resolve`, `write-off`, and
+`reverse`; clients cannot patch financial status fields directly.
+
+Creating a handover or deposit, reversing either, and writing off a variance
+requires an `Idempotency-Key` header. Reuse with another payload is rejected.
+Responses expose public UUIDs and minor-unit amounts, never internal IDs,
+fingerprints, polymorphic classes, or ledger-account IDs.
+
+Reports are available under `/api/v1/reports/{collector-collections,cash-handovers,cash-variances,cash-deposits,cash-position}`.
+They accept `date_from` and `date_to` where applicable, enforce verified tenant
+and branch scope, and derive wallet positions from posted ledger entries.
+
 ## Surface and authentication
 
 - All first-party business endpoints are rooted at `/api/v1`; route names use `api.v1.*`.
@@ -64,6 +88,13 @@ authorization-gated streams from private storage.
 
 ## Code naming
 
+## Loan commands
+
+Loan disbursement, repayment, settlement payment, repayment reversal, and
+disbursement reversal require `Idempotency-Key`. Loan resources expose public
+UUIDs only. Application, product, loan, and repayment lists use the standard
+paginator and tenant/branch filters.
+
 ## Contribution API
 
 Plan routes live under `/api/v1/contribution-plans`; enrolments and their
@@ -76,6 +107,40 @@ Amounts use integer `*_minor` values; plan resources also render decimal strings
 without floating-point arithmetic. Enrolment positions are expected-contribution
 summaries, not wallet balances. Clients cannot create obligations directly.
 
+## Accounting and wallet API
+
+Ledger accounts, wallets, transactions, trial balances, and member wallet
+summaries live under `/api/v1`. Routes resolve public UUIDs within verified
+active context; internal ownership keys are never accepted or returned.
+Financial posting requires an `Idempotency-Key` header and currently permits
+only controlled `adjustment` and `wallet_transfer` transaction types. Future
+business modules must call the central posting action rather than exposing
+generic entry creation.
+
+Money inputs and authoritative values use positive integer minor units with an
+ISO currency code. Transactions expose their lines only on detail responses.
+Wallet balances and trial balances are computed from posted entries and must
+not be interpreted as contribution obligations. Reversal is an explicit action
+requiring a reason; generic status mutation and transaction deletion do not
+exist.
+
+## Contribution collection and receipts
+
+Collection endpoints live under `/api/v1/contribution-payments`; creation and
+reversal require `Idempotency-Key`. Clients provide public member, enrolment,
+obligation, and source-wallet UUIDs, never ledger-account or internal IDs.
+Money input uses integer `amount_minor`.
+
+Allocation strategies are `oldest_due_first`, `current_period_first`,
+`selected_obligations`, and `leave_unallocated`. Automatic partial allocation
+is rejected when disabled. Advance allocation uses only generated obligations.
+Excess is retained only when overpayments are permitted or the caller
+explicitly leaves the payment unallocated.
+
+Public receipt verification is rate limited and returns minimal authenticity
+data with masked membership information. It excludes profiles, wallet/ledger
+details, collector-private data, hashes, and internal identifiers.
+
 ## Code naming
 
 - Controllers are singular (`ContributionController`) and thin.
@@ -83,3 +148,7 @@ summaries, not wallet balances. Clients cannot create obligations directly.
 - API Resources are singular (`ContributionResource`) with collection resources only when collection metadata differs.
 - Policies are singular model names (`ExpensePolicy`).
 - Actions use imperative intent (`RecordContribution`, `PostJournal`, `ReverseTransaction`); services name cohesive capabilities (`LedgerPostingService`) and are not generic repositories.
+Welfare financial commands require `Idempotency-Key`. Welfare routes expose
+public UUIDs only and resolve all records within the verified active
+organisation and, where applicable, active branch. Private document storage
+paths and sensitive beneficiary identifiers are never returned.

@@ -1,5 +1,25 @@
 # Database Conventions
 
+## Expense records
+
+Expense tables use organisation ownership, optional branch ownership, public
+UUIDs, organisation-scoped numbers/idempotency, integer minor units,
+request-local item/approval sequences, restrictive historical foreign keys,
+and explicit MySQL-safe key names.
+
+## Reconciliation constraints
+
+Reconciliation uses explicit, MySQL-safe constraint and index names. Session,
+handover, deposit, and declaration numbers are unique within an organisation;
+handover/deposit idempotency keys are organisation-scoped; nullable unique keys
+enforce one active session and declaration. Foreign keys restrict deletion of
+cash-custody history.
+
+Cross-column monetary invariants are enforced in domain actions because
+SQLite/MySQL check-constraint behavior differs across supported environments.
+Non-negative amounts use unsigned integers in MySQL and application validation
+everywhere. Database uniqueness remains the final concurrent race guard.
+
 ## Current configuration
 
 The repository defaults to SQLite (`DB_CONNECTION=sqlite`); database-backed cache, queue, and session are the local defaults. Laravel configurations for MySQL/MariaDB/PostgreSQL/SQL Server also exist. Tests explicitly use SQLite. Production database engine, collation, backup/restore policy, retention, and high-availability requirements require owner approval before schema work.
@@ -74,3 +94,37 @@ while preventing duplicate current enrolments. Obligation sequence numbers and
 due dates are unique within an enrolment. Expected amounts are immutable
 minor-unit snapshots; ending an enrolment cancels future obligations instead of
 deleting history.
+
+The accounting foundation adds `ledger_accounts`,
+`transaction_number_sequences`, `financial_transactions`,
+`transaction_entries`, `accounting_periods`, and
+`financial_idempotency_keys`; Wallets adds `wallets`. Financial history uses
+restrictive foreign keys and no soft deletion. Ledger accounts and wallets may
+be soft deleted only when they have no entries. Portable unique keys protect
+organisation account codes, transaction numbers, reversal links,
+idempotency keys, entry sequence, accounting period ranges, and one active
+wallet per owner/type/currency. Positive entry amounts, balanced totals, branch
+ancestry, and cross-record currency consistency are enforced in the central
+posting transaction and tests because portable database constraints cannot
+express all of them consistently across SQLite and the unselected production
+engine.
+
+Collection adds `contribution_payments`,
+`contribution_payment_allocations`, `receipts`,
+`payment_number_sequences`, and `receipt_number_sequences`. Payment and receipt
+numbers and payment idempotency keys are organisation-scoped unique values.
+Allocations and receipts are append-only and corrections use linked records.
+Obligation timing now uses `schedule_status`; `satisfaction_status`
+independently records unsatisfied, partially satisfied, or satisfied. Active
+allocation totals are recalculated under obligation row locks.
+## Welfare records
+
+Welfare configuration may be soft-deleted only where history is not rewritten.
+Enrolments, events, submitted claims, approvals, liabilities, payments,
+amendments, and documents are historical records and are not deleted. Welfare
+money is stored as non-negative integer minor units and percentage rates as
+basis points. Service-layer transactions enforce aggregate constraints that
+cannot be expressed portably, including beneficiary totals, recognised
+liability limits, and prevention of overpayment. MySQL check-constraint and
+row-lock behaviour must be verified on the production database engine; SQLite
+tests do not prove those concurrency guarantees.

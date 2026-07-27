@@ -2,6 +2,8 @@
 
 namespace App\Domain\Contributions\Models;
 
+use App\Domain\Collections\Models\ContributionPaymentAllocation;
+use App\Domain\Contributions\Enums\ObligationSatisfactionStatus;
 use App\Domain\Contributions\Enums\ObligationStatus;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Models\Organisation;
@@ -11,10 +13,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
- * @property ObligationStatus $status
+ * @property ObligationStatus $schedule_status
+ * @property ObligationSatisfactionStatus $satisfaction_status
  * @property Carbon $period_start
  * @property Carbon $period_end
  * @property Carbon $due_date
@@ -23,7 +27,8 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'public_id', 'organisation_id', 'contribution_plan_id',
     'member_plan_enrolment_id', 'member_id', 'sequence_number', 'period_start',
-    'period_end', 'due_date', 'expected_amount_minor', 'currency_code', 'status',
+    'period_end', 'due_date', 'expected_amount_minor', 'currency_code',
+    'schedule_status', 'satisfaction_status',
     'grace_due_date', 'satisfied_amount_minor', 'outstanding_amount_minor',
     'satisfied_at', 'generated_at',
 ])]
@@ -33,7 +38,8 @@ class ContributionObligation extends Model
     use HasFactory, HasUuids;
 
     protected $attributes = [
-        'status' => 'upcoming',
+        'schedule_status' => 'upcoming',
+        'satisfaction_status' => 'unsatisfied',
         'satisfied_amount_minor' => 0,
         'outstanding_amount_minor' => 0,
     ];
@@ -73,11 +79,18 @@ class ContributionObligation extends Model
         return $this->belongsTo(Member::class);
     }
 
+    /** @return HasMany<ContributionPaymentAllocation, $this> */
+    public function paymentAllocations(): HasMany
+    {
+        return $this->hasMany(ContributionPaymentAllocation::class);
+    }
+
     /** @return array<string, string> */
     protected function casts(): array
     {
         return [
-            'status' => ObligationStatus::class,
+            'schedule_status' => ObligationStatus::class,
+            'satisfaction_status' => ObligationSatisfactionStatus::class,
             'period_start' => 'date',
             'period_end' => 'date',
             'due_date' => 'date',

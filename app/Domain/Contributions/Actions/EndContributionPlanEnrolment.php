@@ -37,8 +37,8 @@ class EndContributionPlanEnrolment
             ContributionObligation::query()
                 ->whereBelongsTo($enrolment, 'enrolment')
                 ->whereDate('due_date', '>', $effectiveDate->toDateString())
-                ->whereIn('status', [ObligationStatus::Upcoming, ObligationStatus::Due])
-                ->update(['status' => ObligationStatus::Cancelled]);
+                ->whereIn('schedule_status', [ObligationStatus::Upcoming, ObligationStatus::Due])
+                ->update(['schedule_status' => ObligationStatus::Cancelled]);
 
             return $enrolment->refresh()->load(['contributionPlan', 'member', 'branch', 'group']);
         });

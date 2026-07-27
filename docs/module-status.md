@@ -8,19 +8,19 @@ foundation exists; it does not imply the module's later workflows are available.
 | Identity roles, permissions, and active context | Foundation complete | Roles, permissions, role-permission links, organisation role assignments, user public IDs | Role and organisation role assignment | Context selection, roles, role assignments | No UI | Seeder, domain, context, API, and isolation tests |
 | Organisations | Foundation complete | Organisations, branches, settings | Organisation, branch, setting | Health/context only; no CRUD | No UI | Domain and isolation tests |
 | Membership | Foundation complete | Members, number sequences, status history, groups, group memberships, contacts, documents | Member, group, contact, document and history models | Member lifecycle, groups, contacts, account links, private documents | No UI | Domain, API, privacy, scope, lifecycle and storage tests |
-| Contributions | Plan and enrolment foundation complete | Plans, enrolments, expected obligations | ContributionPlan, MemberPlanEnrolment, ContributionObligation | Plan lifecycle, enrolment lifecycle, schedules, staff member summary | No UI | Domain, scheduling, API, authorization and isolation tests |
-| Wallets | Planned | No migrations | No models | No API | No UI | No tests |
-| Accounting | Planned | No migrations | No models | No API | No UI | No tests |
-| Loans | Planned | No migrations | No models | No API | No UI | No tests |
-| Welfare | Planned | No migrations | No models | No API | No UI | No tests |
-| Expenses and petty cash | Planned | No migrations | No models | No API | No UI | No tests |
-| Reconciliation | Planned | No migrations | No models | No API | No UI | No tests |
+| Contributions and collection | Collection foundation complete | Plans, enrolments, split-status obligations, payments, allocations, payment sequences | ContributionPlan, MemberPlanEnrolment, ContributionObligation, ContributionPayment, ContributionPaymentAllocation | Planning, enrolment, collection, allocation, reversal, member payment history and position | No UI | Domain, scheduling, posting, allocation, reversal, API, authorization and isolation tests |
+| Wallets | Foundation complete | Wallets with polymorphic owners and active-owner uniqueness | Wallet | Staff CRUD/lifecycle, derived balance, member wallet summary | No UI | Domain, API, lifecycle, balance, authorization, and isolation tests |
+| Accounting | Foundation complete | Chart of accounts, transaction sequence, transactions, entries, periods, idempotency keys | LedgerAccount, FinancialTransaction, TransactionEntry, AccountingPeriod | Account CRUD/lifecycle, controlled posting, reversal, transaction views, trial balance | No UI | Posting, balancing, idempotency, reversal, immutability, periods, API, authorization, and isolation tests |
+| Loans | Phase 09 implemented | Migrations added | Domain models/actions/services added | `/api/v1` lifecycle and portfolio API added | No UI | Focused domain/API tests added |
+| Welfare | Phase 10 implemented | Products, event types, enrolments, events, claims, terms, beneficiaries, approvals, documents, liabilities, payments, amendments and sequences | Welfare domain models, actions and calculation/eligibility services | `/api/v1` product, enrolment, event, claim, beneficiary, document, liability, payment and report endpoints | No UI | Focused domain, API, accounting, authorization and isolation tests added |
+| Expenses and petty cash | Foundation implemented | Categories, requests, items, approvals, documents, payments, advances, retirements, sequences | Expense and petty-cash models | Categories, requests, approvals, payments, evidence, advances, retirements and reports | No UI | Foundation, route, authentication and accounting regression tests |
+| Reconciliation | Cash-control foundation complete | Sessions, declarations, handovers, variances, deposits, sequences, payment-session link | CollectorCollectionSession, CollectorCashDeclaration, CollectorCashHandover, CollectorCashVariance, CashDepositBatch | Session, handover, variance, deposit lifecycle and operational reports | No UI | Domain, posting, authorization, idempotency, isolation and API tests |
 | Approvals | Planned | No migrations | No models | No API | No UI | No tests |
 | Complaints | Planned | No migrations | No models | No API | No UI | No tests |
 | Payments and Mobile Money | Planned | No migrations | No models | No API | No UI | No tests |
 | Auditing | Planned | No migrations | No models | No API | No UI | No tests |
 | Beneficiaries | Foundation complete within Membership | Unified member contacts | MemberContact | Nested contact API and entitlement validation | No UI | Allocation, nesting and masking tests |
-| Receipts and statements | Planned | No migrations | No models | No API | No UI | No tests |
+| Receipts and statements | Digital receipt foundation complete | Receipts and receipt-number sequences | Receipt | Staff list/detail/print data/reissue and public verification; statements deferred | No UI | Issuance, reversal, verification, privacy and API tests |
 | Reminders | Planned | No migrations | No models | No API | No UI | No tests |
 | Backups | Planned | No migrations | No models | No API | No UI | No tests |
 | External APIs | Planned | No migrations | No models | No API | No UI | No tests |
@@ -32,6 +32,7 @@ organisation-aware assignments, and session-persisted active context. Custom
 roles, direct user permissions, groups, token-specific contexts, and platform
 administration remain deferred.
 
-The Contributions foundation defines expected contribution obligations only.
-Collection, allocation, receipts, wallets, ledger postings, rotational payouts,
-and member self-service remain deferred.
+Contribution collection now supports manually confirmed cash, bank, cheque,
+card, and Mobile Money records through the central ledger. Provider callbacks,
+cash/bank reconciliation, rendered PDFs, rotational payouts, and member
+self-service remain deferred.

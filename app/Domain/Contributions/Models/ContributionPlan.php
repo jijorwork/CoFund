@@ -2,6 +2,7 @@
 
 namespace App\Domain\Contributions\Models;
 
+use App\Domain\Collections\Models\ContributionPayment;
 use App\Domain\Contributions\Enums\ContributionAmountType;
 use App\Domain\Contributions\Enums\ContributionFrequency;
 use App\Domain\Contributions\Enums\ContributionPlanStatus;
@@ -93,6 +94,12 @@ class ContributionPlan extends Model
     public function obligations(): HasMany
     {
         return $this->hasMany(ContributionObligation::class);
+    }
+
+    /** @return HasMany<ContributionPayment, $this> */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(ContributionPayment::class);
     }
 
     /** @return array<string, string> */

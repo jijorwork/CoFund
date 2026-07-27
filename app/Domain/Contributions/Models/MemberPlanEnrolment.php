@@ -2,6 +2,7 @@
 
 namespace App\Domain\Contributions\Models;
 
+use App\Domain\Collections\Models\ContributionPayment;
 use App\Domain\Contributions\Enums\ApprovalStatus;
 use App\Domain\Contributions\Enums\EnrolmentStatus;
 use App\Domain\Membership\Models\Group;
@@ -103,6 +104,12 @@ class MemberPlanEnrolment extends Model
     public function obligations(): HasMany
     {
         return $this->hasMany(ContributionObligation::class);
+    }
+
+    /** @return HasMany<ContributionPayment, $this> */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(ContributionPayment::class);
     }
 
     /** @return array<string, string> */

@@ -2,12 +2,17 @@
 
 namespace App\Domain\Membership\Models;
 
+use App\Domain\Accounting\Models\TransactionEntry;
+use App\Domain\Collections\Models\ContributionPayment;
 use App\Domain\Contributions\Models\ContributionObligation;
 use App\Domain\Contributions\Models\MemberPlanEnrolment;
+use App\Domain\Loans\Models\Loan;
+use App\Domain\Loans\Models\LoanApplication;
 use App\Domain\Membership\Enums\MemberGender;
 use App\Domain\Membership\Enums\MemberStatus;
 use App\Domain\Organisations\Models\Branch;
 use App\Domain\Organisations\Models\Organisation;
+use App\Domain\Wallets\Models\Wallet;
 use App\Models\User;
 use Database\Factories\Domain\Membership\Models\MemberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -132,6 +137,36 @@ class Member extends Model
     public function contributionObligations(): HasMany
     {
         return $this->hasMany(ContributionObligation::class);
+    }
+
+    /** @return MorphMany<Wallet, $this> */
+    public function wallets(): MorphMany
+    {
+        return $this->morphMany(Wallet::class, 'walletable');
+    }
+
+    /** @return HasMany<ContributionPayment, $this> */
+    public function contributionPayments(): HasMany
+    {
+        return $this->hasMany(ContributionPayment::class);
+    }
+
+    /** @return HasMany<LoanApplication, $this> */
+    public function loanApplications(): HasMany
+    {
+        return $this->hasMany(LoanApplication::class);
+    }
+
+    /** @return HasMany<Loan, $this> */
+    public function loans(): HasMany
+    {
+        return $this->hasMany(Loan::class);
+    }
+
+    /** @return HasMany<TransactionEntry, $this> */
+    public function transactionEntries(): HasMany
+    {
+        return $this->hasMany(TransactionEntry::class);
     }
 
     /** @return array<string, string> */

@@ -10,6 +10,8 @@ enum SystemRole: string
     case Treasurer = 'treasurer';
     case Collector = 'collector';
     case LoanOfficer = 'loan_officer';
+    case WelfareOfficer = 'welfare_officer';
+    case Verifier = 'verifier';
     case Approver = 'approver';
     case Auditor = 'auditor';
     case Member = 'member';
@@ -23,6 +25,8 @@ enum SystemRole: string
             self::Treasurer => 'Treasurer',
             self::Collector => 'Collector',
             self::LoanOfficer => 'Loan Officer',
+            self::WelfareOfficer => 'Welfare Officer',
+            self::Verifier => 'Verifier',
             self::Approver => 'Approver',
             self::Auditor => 'Auditor',
             self::Member => 'Member',

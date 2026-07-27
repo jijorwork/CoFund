@@ -23,7 +23,8 @@ class ContributionObligationResource extends JsonResource
             'grace_due_date' => $this->grace_due_date?->toDateString(),
             'expected_amount_minor' => $this->expected_amount_minor,
             'currency_code' => $this->currency_code,
-            'status' => $this->derivedStatus()->value,
+            'schedule_status' => $this->derivedStatus()->value,
+            'satisfaction_status' => $this->satisfaction_status->value,
             'satisfied_amount_minor' => $this->satisfied_amount_minor,
             'outstanding_amount_minor' => $this->outstanding_amount_minor,
         ];
@@ -31,8 +32,8 @@ class ContributionObligationResource extends JsonResource
 
     private function derivedStatus(): ObligationStatus
     {
-        if (! in_array($this->status, [ObligationStatus::Upcoming, ObligationStatus::Due, ObligationStatus::Overdue], true)) {
-            return $this->status;
+        if (! in_array($this->schedule_status, [ObligationStatus::Upcoming, ObligationStatus::Due, ObligationStatus::Overdue], true)) {
+            return $this->schedule_status;
         }
 
         $today = CarbonImmutable::now(

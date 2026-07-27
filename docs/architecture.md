@@ -1,5 +1,22 @@
 # CoFund Architecture
 
+## Expense boundary
+
+Expenses owns classification, requests, approval evidence, payments,
+petty-cash advances, and retirements. Approval never posts. Financial effects
+go through Accounting and custody balances remain Wallet-derived. Procurement,
+payroll, suppliers, inventory, loans, welfare, and provider integrations remain
+outside this boundary.
+
+## Reconciliation boundary
+
+Reconciliation owns collector sessions, immutable cash declarations, custody
+handovers, variances, and office-cash deposit batches. It consumes Collections
+for session-linked payment facts, Wallets for custody identities, Accounting as
+the only balance/posting authority, and Identity/Approvals for permissions and
+maker-checker controls. It does not duplicate payments, transaction entries,
+wallet balances, receipts, or member data.
+
 ## Baseline repository
 
 At 2026-07-25 the repository runs Laravel Framework 13.22.0. `composer.json` requires PHP `^8.3` (the inspected CLI is PHP 8.4.23). It is a Laravel server-rendered starter using Livewire 4.3, Flux UI 2.15, Tailwind CSS 4, Vite 8, and Blade. Fortify provides session authentication, registration, password reset, email verification, confirmed two-factor authentication, and passkeys. Pest 4 and PHPUnit 12 are configured; feature tests use `RefreshDatabase` with SQLite, array cache/session, and the synchronous queue.
@@ -26,8 +43,15 @@ Suggested namespaces (introduced only as implementation demands):
 | `Contributions` | Plans, enrolments, schedules, collections, receipts |
 | `Wallets` | Member/organisation wallet identities and balance projections |
 | `Accounting` | Chart of accounts, journals, entries, posting and reversals |
-| `Loans` | Loans, guarantors, schedules, repayments (post-MVP) |
+| `Loans` | Phase 09 products, applications, guarantees, collateral, approvals, offers, schedules, disbursements, repayments, settlement, and reporting |
 | `Welfare` | Welfare schemes, claims, benefits |
+
+Phase 10 keeps welfare products, enrolment and claim workflow in the Welfare
+domain. Eligibility and benefit calculations are explainable domain services.
+Final approval creates a claims-payable liability through Accounting; benefit
+payment settles that liability from an asset-backed wallet. Documents use a
+dedicated private store, while receipts reuse the Collections receipt
+infrastructure.
 | `Expenses` | Expenses, petty cash, disbursement requests |
 | `Reconciliation` | Statements, matching, variances, close workflow |
 | `Approvals` | Reusable approval definitions, requests, steps, decisions |
@@ -121,3 +145,9 @@ enrolments exist. Active enrolments generate bounded obligations under a row
 lock; reruns identify records by enrolment and due date. Approval-required
 enrolments have no schedule until a different actor approves them. Obligations
 are expectations, not financial transactions, and create no balance or posting.
+
+The Collections subdomain owns manual contribution payments, obligation
+allocations, and digital receipts. It calls Accounting once per payment and
+never creates ledger entries directly. Allocation changes satisfaction only
+after that posting succeeds. Source-wallet resolution belongs to Collections;
+external provider intents and callbacks remain in the deferred Payments domain.

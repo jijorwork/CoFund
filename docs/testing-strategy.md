@@ -1,5 +1,31 @@
 # Testing Strategy
 
+## Phase 09 loan coverage
+
+Loan tests cover deterministic terms and schedules, product limits, eligibility
+snapshots and overrides, distinct approval actors, immutable offers, one active
+disbursement, balanced posting, allocation order, arrears boundaries,
+settlement, receipts, reversals, tenant isolation, UUID routes, permissions,
+and idempotency conflicts. MySQL integration coverage is required for locking
+and identifier-length behavior because SQLite cannot prove those properties.
+
+## Expense coverage
+
+Expense tests cover tenant ancestry, account classification, integer line
+totals, approval-threshold snapshots, append-only decisions, protected routes,
+and accounting regressions. Production-engine CI must add concurrent sequence,
+approval, overpayment, and idempotency contention.
+
+## Reconciliation coverage
+
+Reconciliation tests must cover denomination arithmetic, exact/shortage/overage
+classification, one-open-session constraints, immutable declarations, tenant
+ancestry, lifecycle route registration, authentication, central-ledger
+postings, maker-checker rejection, idempotent retries, branch isolation, and
+compensating reversals. MySQL migration verification is required because
+identifier limits and concurrent unique-key behavior are not fully represented
+by the SQLite feature-test database.
+
 ## Current baseline
 
 The project uses Pest 4 with PHPUnit 12. Feature tests extend Laravel's test case and apply `RefreshDatabase`; the configured test database is SQLite with array cache/session and synchronous queues. Existing tests cover starter authentication, dashboard, and settings flows. Larastan and Pint are installed for static analysis and formatting.
@@ -44,6 +70,24 @@ position semantics; UUID-only responses; permissions; and tenant/branch scope.
 Production-engine CI must prove concurrent schedule generation under real row
 locking and unique-index contention.
 
+Accounting coverage proves default-chart idempotency and classification;
+wallet ownership, uniqueness, lifecycle, and derived balances; period overlap
+and close/reopen behavior; balanced atomic posting; deterministic transaction
+numbers; same-key retries and conflicting-key rejection; immutable entries and
+posted transactions; exact compensating reversals; trial balance; public-ID-only
+API resources; permission boundaries; and organisation/branch isolation.
+Production-engine CI must additionally exercise concurrent sequence and
+idempotency allocation under real row locks and validate the portable
+application-level invariants against the selected engine.
+
+Collection coverage includes one-transaction cash posting, source/destination
+wallet accounting, allocation and unallocated totals, separated obligation
+satisfaction, payment and receipt idempotency, immutable history, compensating
+reversal, derived wallet restoration, public receipt privacy, UUID-only APIs,
+authorization, and tenant-consistent factories. Production-engine CI must
+prove concurrent payments cannot over-satisfy an obligation and that payment
+and receipt sequences remain unique under contention.
+
 ## Database compatibility
 
 SQLite remains fast for normal feature tests, but it cannot prove all production-engine constraints or locking behavior. Once the production database is approved, CI should add a targeted suite against that engine for transactions, row locks, indexes, constraints, JSON behavior, and concurrent idempotency.
@@ -51,3 +95,11 @@ SQLite remains fast for normal feature tests, but it cannot prove all production
 ## Delivery gate
 
 Every change adds or updates a Pest test and runs the narrowest relevant `php artisan test --compact` target. PHP changes also run `vendor/bin/pint --dirty --format agent`; meaningful backend changes run Larastan. Before release, run the full suite, static analysis, dependency audits, and production-engine integration tests.
+Phase 10 welfare coverage targets product configuration, calendar-safe waiting
+periods, explainable eligibility, deterministic integer benefit calculations,
+claim workflow separation, append-only approval history, liability and payment
+double-entry postings, idempotency conflicts, compensating reversals, receipt
+privacy, branch/organisation isolation, and aggregate reports. Financial tests
+must assert both business state and balanced ledger entries. Production-engine
+tests remain necessary for MySQL row locking and concurrent sequence/payment
+contention.

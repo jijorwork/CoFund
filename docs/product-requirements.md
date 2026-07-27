@@ -1,5 +1,21 @@
 # CoFund Product Requirements
 
+## Expense and petty-cash foundation
+
+CoFund supports classified, evidenced expense requests with explicit review,
+approval, direct payment, reversal, and completion. Petty-cash advances remain
+staff receivables until supported retirement and returned cash clear them;
+shortages are not automatically expensed.
+
+## Cash-control foundation
+
+Collector cash is grouped into explicit collection sessions. A collector
+closes a session, declares physical cash, and submits it for independent
+review. Approved handovers move accepted cash from collector to office
+custody; shortages and overages remain traceable. Independently confirmed
+deposit batches then move office cash to bank or manual Mobile Money custody.
+All balances come from the central double-entry ledger.
+
 ## Product intent
 
 CoFund is an API-first, multi-organisation community-finance platform for susu, welfare associations, cooperatives, savings groups, and related organisations. The primary experience must remain simple and mobile-friendly while exposing stable capabilities under `/api/v1` for first-party and external clients.
@@ -20,14 +36,15 @@ CoFund is an API-first, multi-organisation community-finance platform for susu, 
 
 The first MVP establishes organisations, access context, members and beneficiaries, contribution plans and enrolments, the ledger and wallets, contribution collection, expenses, reconciliation, approvals, auditing, administration, and a hardened versioned API.
 
-The first MVP explicitly defers loans, Mobile Money, rotational payouts, offline collection, and advanced reporting. Their boundaries may be documented, but no MVP workflow should depend on them.
+The first MVP originally deferred loans, Mobile Money, rotational payouts, offline collection, and advanced reporting. Phase 09 now activates the loan domain as the first post-foundation lifecycle; the other deferred capabilities remain out of scope, and loans must not depend on them.
 
 The contribution-plan foundation supports regular, target, welfare, flexible,
 and rotational-susu definitions; rotational payout ordering and execution stay
 deferred. Fixed, member-selected, and flexible amount rules, enrolment approval,
 expected schedules, and staff position summaries are supported. Expected
-obligations represent planned contributions only; collection, allocation,
-receipts, balances, and accounting remain later phases.
+obligations remain planned contributions only. Manual contribution collection,
+allocation, receipts, wallet credit, and ledger accounting are now supported;
+provider integrations and reconciliation remain later phases.
 
 ## Product principles
 
@@ -44,3 +61,12 @@ receipts, balances, and accounting remain later phases.
 - Retried write requests do not duplicate financial effects.
 - An authenticated user can safely select among only their active assignments.
 - The same domain actions serve the API and future administration UI.
+## Phase 10 welfare scope
+
+Welfare products support member enrolment, configurable waiting periods and
+eligibility, welfare events, claims, beneficiaries, evidence verification,
+maker-checker approvals, accrued claim liabilities, partial or full benefit
+payments, receipts, reversals, and operational reports. Calculations use minor
+units and basis points. External provider integrations, automated medical
+verification, payout callbacks, notifications, and payroll deductions remain
+deferred.

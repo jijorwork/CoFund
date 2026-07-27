@@ -19,19 +19,19 @@ class CalculateContributionPosition
             : $enrolment->obligations()->get();
         $count = $obligations->count();
         $due = $obligations->filter(fn ($obligation): bool => $obligation->due_date->toDateString() <= $today
-            && $obligation->status !== ObligationStatus::Cancelled);
+            && $obligation->schedule_status !== ObligationStatus::Cancelled);
         $expected = (int) $due->sum('expected_amount_minor');
         $satisfied = (int) $due->sum('satisfied_amount_minor');
         $outstanding = max(0, $expected - $satisfied);
         $overdueCount = $obligations->filter(fn ($obligation): bool => $obligation->grace_due_date !== null
             && $obligation->grace_due_date->toDateString() < $today
             && $obligation->outstanding_amount_minor > 0
-            && $obligation->status !== ObligationStatus::Cancelled)->count();
+            && $obligation->schedule_status !== ObligationStatus::Cancelled)->count();
         $upcomingCount = $obligations->filter(fn ($obligation): bool => $obligation->due_date->toDateString() > $today
-            && $obligation->status !== ObligationStatus::Cancelled)->count();
+            && $obligation->schedule_status !== ObligationStatus::Cancelled)->count();
         $next = $obligations
             ->filter(fn ($obligation): bool => $obligation->due_date->toDateString() >= $today
-                && $obligation->status !== ObligationStatus::Cancelled)
+                && $obligation->schedule_status !== ObligationStatus::Cancelled)
             ->sortBy('due_date')
             ->first();
 

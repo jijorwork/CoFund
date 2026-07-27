@@ -2,12 +2,15 @@
 
 namespace App\Domain\Organisations\Models;
 
+use App\Domain\Accounting\Models\FinancialTransaction;
+use App\Domain\Accounting\Models\LedgerAccount;
 use App\Domain\Contributions\Models\ContributionPlan;
 use App\Domain\Contributions\Models\MemberPlanEnrolment;
 use App\Domain\Identity\Models\OrganisationUserRole;
 use App\Domain\Membership\Models\Group;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Enums\BranchStatus;
+use App\Domain\Wallets\Models\Wallet;
 use Database\Factories\Domain\Organisations\Models\BranchFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -109,6 +112,24 @@ class Branch extends Model
     public function contributionEnrolments(): HasMany
     {
         return $this->hasMany(MemberPlanEnrolment::class);
+    }
+
+    /** @return HasMany<LedgerAccount, $this> */
+    public function ledgerAccounts(): HasMany
+    {
+        return $this->hasMany(LedgerAccount::class);
+    }
+
+    /** @return HasMany<FinancialTransaction, $this> */
+    public function financialTransactions(): HasMany
+    {
+        return $this->hasMany(FinancialTransaction::class);
+    }
+
+    /** @return HasMany<Wallet, $this> */
+    public function wallets(): HasMany
+    {
+        return $this->hasMany(Wallet::class);
     }
 
     /**

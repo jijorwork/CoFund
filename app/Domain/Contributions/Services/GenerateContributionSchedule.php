@@ -73,7 +73,7 @@ class GenerateContributionSchedule
                     'period_end' => $periodEnd->toDateString(),
                     'expected_amount_minor' => $expectedAmount,
                     'currency_code' => $locked->currency_code,
-                    'status' => $status,
+                    'schedule_status' => $status,
                     'grace_due_date' => $graceDueDate->toDateString(),
                     'satisfied_amount_minor' => 0,
                     'outstanding_amount_minor' => $expectedAmount ?? 0,
@@ -86,7 +86,7 @@ class GenerateContributionSchedule
             $nextDueDate = ContributionObligation::query()
                 ->whereBelongsTo($locked, 'enrolment')
                 ->whereDate('due_date', '>=', $today->toDateString())
-                ->where('status', '!=', ObligationStatus::Cancelled)
+                ->where('schedule_status', '!=', ObligationStatus::Cancelled)
                 ->orderBy('due_date')
                 ->value('due_date');
             $locked->update(['next_due_date' => $nextDueDate]);
