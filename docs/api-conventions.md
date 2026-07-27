@@ -157,3 +157,16 @@ Withdrawal payout and reversal commands require `Idempotency-Key`. Clients
 provide public wallet UUIDs and gross minor-unit amounts; ledger account IDs,
 workflow state, approval actors, restriction internals, and fingerprints are
 never accepted or exposed.
+## Reporting API
+
+Dashboards and consolidated reports use `/api/v1/dashboard`,
+`/api/v1/dashboards/*`, and `/api/v1/reports/*`. Responses contain `data`,
+`summary`, report/date/currency/scope metadata, and links. Local `date_from` and
+`date_to` are inclusive; `as_of` means the organisation-local day end. Money
+remains minor units. Ratios expose numerator, denominator, and basis points;
+zero denominators return `null`.
+
+Filters and sorts are registry allow-listed. Synchronous ranges are limited to
+366 days. Saved-report permissions are rechecked when run. The initial export
+format is private queued CSV for executable registry reports; APIs never expose
+storage paths.

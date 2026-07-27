@@ -112,3 +112,11 @@ Withdrawal products may be organisation-wide or branch/group restricted.
 Every hold, request, payout, and report is organisation-scoped and branch-aware.
 Creator, reviewer, primary approver, and secondary approver separation compares
 user identity. Payout authority remains separate from approval authority.
+## Report scope
+
+Report services enforce organisation scope in addition to controller
+permissions. Branch assignments cannot select another branch through filters.
+Saved definitions do not preserve authority: running or exporting rechecks the
+active role and scope. Export jobs rebuild verified context from an active role
+assignment and fail safely if it expires. Private exports remain owner-scoped
+and every download is reauthorised.

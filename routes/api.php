@@ -18,11 +18,13 @@ use App\Http\Controllers\Api\V1\ContributionPaymentController;
 use App\Http\Controllers\Api\V1\ContributionPlanController;
 use App\Http\Controllers\Api\V1\ContributionPlanLifecycleController;
 use App\Http\Controllers\Api\V1\ContributionScheduleController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\ExpenseCategoryController;
 use App\Http\Controllers\Api\V1\ExpenseDocumentController;
 use App\Http\Controllers\Api\V1\ExpensePaymentController;
 use App\Http\Controllers\Api\V1\ExpenseReportController;
 use App\Http\Controllers\Api\V1\ExpenseRequestController;
+use App\Http\Controllers\Api\V1\FinancialReportController;
 use App\Http\Controllers\Api\V1\FinancialTransactionController;
 use App\Http\Controllers\Api\V1\GroupController;
 use App\Http\Controllers\Api\V1\LedgerAccountController;
@@ -45,10 +47,12 @@ use App\Http\Controllers\Api\V1\PettyCashAdvanceController;
 use App\Http\Controllers\Api\V1\PettyCashRetirementController;
 use App\Http\Controllers\Api\V1\PublicReceiptVerificationController;
 use App\Http\Controllers\Api\V1\ReceiptController;
+use App\Http\Controllers\Api\V1\ReportExportController;
 use App\Http\Controllers\Api\V1\ReverseFinancialTransactionController;
 use App\Http\Controllers\Api\V1\RevokeRoleAssignmentController;
 use App\Http\Controllers\Api\V1\RoleAssignmentController;
 use App\Http\Controllers\Api\V1\RoleController;
+use App\Http\Controllers\Api\V1\SavedReportController;
 use App\Http\Controllers\Api\V1\SavingsHoldController;
 use App\Http\Controllers\Api\V1\TrialBalanceController;
 use App\Http\Controllers\Api\V1\WalletBalanceController;
@@ -100,6 +104,27 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             })->name('context');
 
             Route::middleware('role.context')->group(function () {
+                Route::get('dashboard', [DashboardController::class, 'organisation'])->name('dashboard');
+                Route::get('branches/{branchUuid}/dashboard', [DashboardController::class, 'branch'])->name('branches.dashboard');
+                Route::get('dashboards/{dashboardKey}', [DashboardController::class, 'role'])
+                    ->whereIn('dashboardKey', ['treasurer', 'collector', 'loans', 'welfare', 'withdrawals', 'membership', 'audit'])
+                    ->name('dashboards.role');
+
+                Route::get('reports/general-ledger', [FinancialReportController::class, 'generalLedger'])->name('reports.general-ledger');
+                Route::get('reports/trial-balance', [FinancialReportController::class, 'trialBalance'])->name('reports.trial-balance');
+                Route::get('reports/statement-of-financial-position', [FinancialReportController::class, 'financialPosition'])->name('reports.statement-of-financial-position');
+                Route::get('reports/income-and-expenditure', [FinancialReportController::class, 'incomeAndExpenditure'])->name('reports.income-and-expenditure');
+                Route::get('reports/cash-flow', [FinancialReportController::class, 'cashFlow'])->name('reports.cash-flow');
+
+                Route::apiResource('saved-reports', SavedReportController::class)->parameters(['saved-reports' => 'savedReportUuid']);
+                Route::post('saved-reports/{savedReportUuid}/run', [SavedReportController::class, 'run'])->name('saved-reports.run');
+                Route::post('saved-reports/{savedReportUuid}/duplicate', [SavedReportController::class, 'duplicate'])->name('saved-reports.duplicate');
+                Route::get('report-exports', [ReportExportController::class, 'index'])->name('report-exports.index');
+                Route::post('report-exports', [ReportExportController::class, 'store'])->name('report-exports.store');
+                Route::get('report-exports/{exportUuid}', [ReportExportController::class, 'show'])->name('report-exports.show');
+                Route::get('report-exports/{exportUuid}/download', [ReportExportController::class, 'download'])->name('report-exports.download');
+                Route::post('report-exports/{exportUuid}/cancel', [ReportExportController::class, 'cancel'])->name('report-exports.cancel');
+
                 Route::get('roles', RoleController::class)->name('roles.index');
                 Route::get('role-assignments', [RoleAssignmentController::class, 'index'])
                     ->name('role-assignments.index');

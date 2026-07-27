@@ -162,3 +162,15 @@ to require periods from day one, cash-versus-accrual policy, future
 multi-currency and precision, negative-wallet/overdraft rules, approval
 thresholds, opening-balance workflow, and exact postings for each future
 business transaction type.
+## Financial reporting formulas
+
+General-ledger rows include posted and reversed journal entries in
+transaction-date, posting-time, transaction-number, and entry-sequence order.
+Running balances follow the configured normal balance. Trial balance exposes
+opening, period, and closing debits/credits and never hides its difference.
+
+Financial-position sections derive from account categories. Current-period
+surplus is net income less net expenses. Member savings remain liabilities,
+never income. The direct cash-flow foundation uses movements in cash, bank,
+Mobile Money, petty-cash, and clearing accounts. Reporting never creates or
+modifies postings.

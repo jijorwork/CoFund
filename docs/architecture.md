@@ -158,3 +158,17 @@ Withdrawals owns savings availability, holds, requests, approvals, payouts,
 and reversals. It consumes ledger-derived wallet balances and authoritative
 loan/welfare records without taking ownership of them. Only payout delegates
 financial movement to Accounting.
+## Reports and dashboards
+
+`app/Domain/Reports` is a read-only layer over existing domain models and the
+ledger. A typed registry allow-lists report keys, filters, sorting, grouping,
+columns, permissions, limits, and export formats. Dashboard builders return
+bounded summaries. Financial statements use ledger account category, purpose,
+and normal balance; saved definitions and run/export metadata are never
+accounting sources.
+
+Phase 12 reporting is uncached. Each execution derives one organisation-local
+date range and reapplies tenant, branch, and active-role scope. CSV generation
+uses the existing queue and private local storage. XLSX, PDF, snapshots,
+cross-organisation consolidation, external BI, and chart rendering are
+deferred.

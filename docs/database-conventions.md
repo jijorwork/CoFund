@@ -134,3 +134,11 @@ Savings holds, submitted requests, terms, approvals, payouts, amendments, and
 receipts are historical records and are never hard deleted. Reservation and
 overpayment limits are enforced inside locked transactions because portable
 SQL constraints cannot express their aggregate invariants.
+## Report metadata
+
+`saved_reports` stores validated user definitions, not results.
+`report_exports` stores private-file lifecycle metadata, and `report_runs`
+stores execution metadata without result rows or SQL. All carry
+`organisation_id` and UUID public identifiers. Owner/name uniqueness and
+tenant/report/status indexes bound access and common queries. Export storage
+paths are internal-only.

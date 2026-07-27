@@ -42,7 +42,7 @@ class SystemAuthorizationSeeder extends Seeder
      */
     private function permissionsFor(SystemRole $role): array
     {
-        return match ($role) {
+        $permissions = match ($role) {
             SystemRole::PlatformAdmin, SystemRole::Member => [],
             SystemRole::OrganisationAdmin => array_values(array_filter(
                 array_map(
@@ -91,6 +91,8 @@ class SystemAuthorizationSeeder extends Seeder
                     FoundationPermission::WelfareLiabilitiesReverse->value,
                     FoundationPermission::WithdrawalPayoutsCreate->value,
                     FoundationPermission::WithdrawalPayoutsReverse->value,
+                    FoundationPermission::ReportsAuditView->value,
+                    FoundationPermission::ReportsDataIntegrityView->value,
                 ], true),
             )),
             SystemRole::BranchManager => [
@@ -495,6 +497,114 @@ class SystemAuthorizationSeeder extends Seeder
                 FoundationPermission::WelfarePaymentsView->value,
                 FoundationPermission::WelfareReportsView->value,
             ],
+        };
+
+        return array_values(array_unique([
+            ...$permissions,
+            ...$this->reportingPermissionsFor($role),
+        ]));
+    }
+
+    /** @return list<string> */
+    private function reportingPermissionsFor(SystemRole $role): array
+    {
+        $savedAndExports = [
+            FoundationPermission::ReportsView->value,
+            FoundationPermission::ReportsSavedCreate->value,
+            FoundationPermission::ReportsSavedUpdate->value,
+            FoundationPermission::ReportsSavedDelete->value,
+            FoundationPermission::ReportsExportsCreate->value,
+            FoundationPermission::ReportsExportsView->value,
+            FoundationPermission::ReportsExportsDownload->value,
+            FoundationPermission::ReportsExportsCancel->value,
+        ];
+
+        return match ($role) {
+            SystemRole::OrganisationAdmin => [
+                ...$savedAndExports,
+                FoundationPermission::DashboardsView->value,
+                FoundationPermission::DashboardsViewOrganisation->value,
+                FoundationPermission::DashboardsViewBranch->value,
+                FoundationPermission::DashboardsViewFinancial->value,
+                FoundationPermission::ReportsFinancialView->value,
+                FoundationPermission::ReportsMembersView->value,
+                FoundationPermission::ReportsContributionsView->value,
+                FoundationPermission::ReportsCollectionsView->value,
+                FoundationPermission::ReportsCollectorsView->value,
+                FoundationPermission::ReportsExpensesView->value,
+                FoundationPermission::ReportsLoansView->value,
+                FoundationPermission::ReportsWelfareView->value,
+                FoundationPermission::ReportsWithdrawalsView->value,
+                FoundationPermission::ReportsSavedShareRole->value,
+                FoundationPermission::ReportsSavedShareOrganisation->value,
+            ],
+            SystemRole::BranchManager => [
+                ...$savedAndExports,
+                FoundationPermission::DashboardsView->value,
+                FoundationPermission::DashboardsViewBranch->value,
+                FoundationPermission::ReportsMembersView->value,
+                FoundationPermission::ReportsContributionsView->value,
+                FoundationPermission::ReportsCollectionsView->value,
+                FoundationPermission::ReportsCollectorsView->value,
+                FoundationPermission::ReportsExpensesView->value,
+                FoundationPermission::ReportsLoansView->value,
+                FoundationPermission::ReportsWelfareView->value,
+                FoundationPermission::ReportsWithdrawalsView->value,
+            ],
+            SystemRole::Treasurer => [
+                ...$savedAndExports,
+                FoundationPermission::DashboardsView->value,
+                FoundationPermission::DashboardsViewOrganisation->value,
+                FoundationPermission::DashboardsViewBranch->value,
+                FoundationPermission::DashboardsViewFinancial->value,
+                FoundationPermission::ReportsFinancialView->value,
+                FoundationPermission::ReportsCollectionsView->value,
+                FoundationPermission::ReportsCollectorsView->value,
+                FoundationPermission::ReportsExpensesView->value,
+                FoundationPermission::ReportsLoansView->value,
+                FoundationPermission::ReportsWelfareView->value,
+                FoundationPermission::ReportsWithdrawalsView->value,
+            ],
+            SystemRole::MembershipOfficer => [
+                ...$savedAndExports,
+                FoundationPermission::DashboardsView->value,
+                FoundationPermission::ReportsMembersView->value,
+                FoundationPermission::ReportsContributionsView->value,
+            ],
+            SystemRole::Collector => [
+                FoundationPermission::ReportsView->value,
+                FoundationPermission::DashboardsViewCollector->value,
+                FoundationPermission::ReportsCollectionsView->value,
+                FoundationPermission::ReportsCollectorsView->value,
+            ],
+            SystemRole::LoanOfficer => [
+                ...$savedAndExports,
+                FoundationPermission::DashboardsViewLoans->value,
+                FoundationPermission::ReportsLoansView->value,
+            ],
+            SystemRole::WelfareOfficer => [
+                ...$savedAndExports,
+                FoundationPermission::DashboardsViewWelfare->value,
+                FoundationPermission::ReportsWelfareView->value,
+                FoundationPermission::DashboardsViewWithdrawals->value,
+                FoundationPermission::ReportsWithdrawalsView->value,
+            ],
+            SystemRole::Auditor => [
+                ...$savedAndExports,
+                FoundationPermission::DashboardsViewFinancial->value,
+                FoundationPermission::ReportsFinancialView->value,
+                FoundationPermission::ReportsMembersView->value,
+                FoundationPermission::ReportsContributionsView->value,
+                FoundationPermission::ReportsCollectionsView->value,
+                FoundationPermission::ReportsCollectorsView->value,
+                FoundationPermission::ReportsExpensesView->value,
+                FoundationPermission::ReportsLoansView->value,
+                FoundationPermission::ReportsWelfareView->value,
+                FoundationPermission::ReportsWithdrawalsView->value,
+                FoundationPermission::ReportsAuditView->value,
+                FoundationPermission::ReportsDataIntegrityView->value,
+            ],
+            default => [],
         };
     }
 }

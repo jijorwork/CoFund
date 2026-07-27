@@ -109,3 +109,11 @@ explanations, integer fee arithmetic, reservation rollback, approval
 separation, balanced payout entries, partial-fee reconciliation, idempotency,
 reversals, receipt privacy, tenant isolation, and reports. Production-engine
 tests remain required for concurrent submission and payout contention.
+## Phase 12 coverage
+
+Reporting tests target registry uniqueness and allow lists, local date
+boundaries, integer ratios, ageing, tenant/branch isolation, ledger ordering,
+normal balances, trial-balance equality, account-purpose classification,
+saved-definition permission revalidation, private exports, and bounded
+dashboard queries. Production MySQL testing must verify JSON fields, aggregate
+query plans, indexes, and queued private-file storage.

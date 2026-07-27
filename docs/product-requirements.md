@@ -80,3 +80,12 @@ full or partial payouts with receipts and reversals. Requested amount is the
 gross savings reduction; net payout is gross less deducted fee. Provider
 callbacks, member-exit processing, debt set-off, notifications, administration
 UI, and frontend pages remain deferred.
+## Phase 12 reports and dashboards scope
+
+CoFund provides role-aware organisation and branch dashboards, ledger-derived
+financial statements, a report registry, saved configurations, execution
+metadata, and private queued CSV exports. Reports are read-only,
+single-organisation, branch-aware, currency-explicit, date-consistent, and
+reversal-aware. Frontend charts, Filament pages, notifications, scheduled
+email, snapshots, cross-organisation reporting, external BI, XLSX, and PDF are
+deferred.
