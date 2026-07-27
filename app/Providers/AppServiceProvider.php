@@ -6,6 +6,10 @@ use App\Domain\Expenses\Models\ExpenseRequest;
 use App\Domain\Expenses\Models\PettyCashAdvance;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Membership\Models\MemberContact;
+use App\Domain\Notifications\Contracts\MessagingNotificationProvider;
+use App\Domain\Notifications\Contracts\SmsNotificationProvider;
+use App\Domain\Notifications\Services\NullMessagingNotificationProvider;
+use App\Domain\Notifications\Services\NullSmsNotificationProvider;
 use App\Domain\Organisations\Models\Branch;
 use App\Domain\Organisations\Models\Organisation;
 use App\Domain\Organisations\Tenancy\TenantContext;
@@ -25,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(TenantContext::class);
+        $this->app->bind(SmsNotificationProvider::class, NullSmsNotificationProvider::class);
+        $this->app->bind(MessagingNotificationProvider::class, NullMessagingNotificationProvider::class);
     }
 
     /**

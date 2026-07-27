@@ -172,3 +172,21 @@ date range and reapplies tenant, branch, and active-role scope. CSV generation
 uses the existing queue and private local storage. XLSX, PDF, snapshots,
 cross-organisation consolidation, external BI, and chart rendering are
 deferred.
+
+## Notifications
+
+`app/Domain/Notifications` separates a tenant-owned dispatch from its
+channel-specific deliveries and append-only delivery attempts. A stable event
+registry defines category, priority, mandatory status, digest eligibility,
+allowed channels, recipient resolver, and required placeholders. Business
+operations must publish only after their transaction commits; delivery failure
+never rolls back the completed business operation.
+
+Every recipient dispatch has an organisation-scoped deterministic
+deduplication key. Message text and policy are snapshotted at dispatch time.
+Templates are versioned, active versions are immutable, and rendering accepts
+only allow-listed scalar placeholders. Action URLs must be relative or use the
+configured application host. In-app delivery is implemented; email uses the
+configured Laravel mail transport. SMS and messaging are provider-neutral and
+remain unavailable through null providers until an approved provider is
+configured. Digest tables are foundations for later scheduled processing.

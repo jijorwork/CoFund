@@ -122,7 +122,7 @@ class BuildFinancialStatements
             ->groupBy($entryTable.'.financial_transaction_id')
             ->select($entryTable.'.financial_transaction_id')
             ->selectRaw(
-                'COALESCE(SUM(CASE WHEN '.$entryTable.'.entry_type = ? THEN '.$entryTable.'.amount_minor ELSE -'.$entryTable.'.amount_minor END), 0) net_liquid_movement_minor',
+                'COALESCE(SUM(CASE WHEN transaction_entries.entry_type = ? THEN transaction_entries.amount_minor ELSE -transaction_entries.amount_minor END), 0) net_liquid_movement_minor',
                 [EntryType::Debit->value],
             )
             ->get();

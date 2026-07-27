@@ -43,7 +43,14 @@ class SystemAuthorizationSeeder extends Seeder
     private function permissionsFor(SystemRole $role): array
     {
         $permissions = match ($role) {
-            SystemRole::PlatformAdmin, SystemRole::Member => [],
+            SystemRole::PlatformAdmin => [],
+            SystemRole::Member => [
+                FoundationPermission::NotificationsViewOwn->value,
+                FoundationPermission::NotificationsReadOwn->value,
+                FoundationPermission::NotificationsArchiveOwn->value,
+                FoundationPermission::NotificationPreferencesViewOwn->value,
+                FoundationPermission::NotificationPreferencesUpdateOwn->value,
+            ],
             SystemRole::OrganisationAdmin => array_values(array_filter(
                 array_map(
                     fn (FoundationPermission $permission): string => $permission->value,
@@ -502,7 +509,66 @@ class SystemAuthorizationSeeder extends Seeder
         return array_values(array_unique([
             ...$permissions,
             ...$this->reportingPermissionsFor($role),
+            ...$this->notificationPermissionsFor($role),
         ]));
+    }
+
+    /** @return list<string> */
+    private function notificationPermissionsFor(SystemRole $role): array
+    {
+        if ($role === SystemRole::PlatformAdmin) {
+            return [];
+        }
+
+        $own = [
+            FoundationPermission::NotificationsViewOwn->value,
+            FoundationPermission::NotificationsReadOwn->value,
+            FoundationPermission::NotificationsArchiveOwn->value,
+            FoundationPermission::NotificationPreferencesViewOwn->value,
+            FoundationPermission::NotificationPreferencesUpdateOwn->value,
+        ];
+
+        return [
+            ...$own,
+            ...match ($role) {
+                SystemRole::OrganisationAdmin => [
+                    FoundationPermission::NotificationPoliciesView->value,
+                    FoundationPermission::NotificationPoliciesUpdate->value,
+                    FoundationPermission::NotificationTemplatesView->value,
+                    FoundationPermission::NotificationTemplatesCreate->value,
+                    FoundationPermission::NotificationTemplatesUpdate->value,
+                    FoundationPermission::NotificationTemplatesActivate->value,
+                    FoundationPermission::NotificationTemplatesRetire->value,
+                    FoundationPermission::NotificationTemplatesPreview->value,
+                    FoundationPermission::NotificationDispatchesView->value,
+                    FoundationPermission::NotificationDispatchesCancel->value,
+                    FoundationPermission::NotificationDeliveriesView->value,
+                    FoundationPermission::NotificationDeliveriesRetry->value,
+                    FoundationPermission::NotificationReportsView->value,
+                    FoundationPermission::MemberNotificationsViewHistory->value,
+                ],
+                SystemRole::BranchManager => [
+                    FoundationPermission::NotificationDispatchesView->value,
+                    FoundationPermission::NotificationDeliveriesView->value,
+                    FoundationPermission::NotificationReportsView->value,
+                    FoundationPermission::MemberNotificationsViewHistory->value,
+                ],
+                SystemRole::MembershipOfficer => [
+                    FoundationPermission::NotificationDeliveriesView->value,
+                    FoundationPermission::MemberNotificationsViewHistory->value,
+                ],
+                SystemRole::Auditor => [
+                    FoundationPermission::NotificationPoliciesView->value,
+                    FoundationPermission::NotificationTemplatesView->value,
+                    FoundationPermission::NotificationDispatchesView->value,
+                    FoundationPermission::NotificationDeliveriesView->value,
+                    FoundationPermission::NotificationReportsView->value,
+                    FoundationPermission::NotificationAuditView->value,
+                    FoundationPermission::MemberNotificationsViewHistory->value,
+                ],
+                default => [],
+            },
+        ];
     }
 
     /** @return list<string> */

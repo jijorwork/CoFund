@@ -170,3 +170,19 @@ Filters and sorts are registry allow-listed. Synchronous ranges are limited to
 366 days. Saved-report permissions are rechecked when run. The initial export
 format is private queued CSV for executable registry reports; APIs never expose
 storage paths.
+
+## Notifications API
+
+Own-notification routes live under `/api/v1/notifications` and are scoped by
+the verified organisation context and authenticated user. Clients can list,
+view, mark read or unread, archive, and request an aggregate summary. Archiving
+never deletes the dispatch or delivery history. Responses expose notification
+UUIDs, safe rendered content, state, priority, and timestamps; they exclude
+recipient contacts, template context, internal IDs, provider payloads, and
+technical failure details.
+
+`GET` and `PUT /api/v1/notification-preferences` manage the authenticated
+user's organisation-specific optional channel preferences. Event keys must
+exist in the registry. Mandatory event delivery is not disabled by a user
+preference. SMS and messaging preferences may be recorded for future use but
+do not make those channels available without a configured provider.

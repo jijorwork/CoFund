@@ -33,10 +33,10 @@ class BuildTrialBalanceReport
             ->groupBy($entryTable.'.ledger_account_id')
             ->select($entryTable.'.ledger_account_id')
             ->selectRaw(
-                'COALESCE(SUM(CASE WHEN '.$transactionTable.'.transaction_date < ? AND '.$entryTable.'.entry_type = ? THEN '.$entryTable.'.amount_minor ELSE 0 END), 0) opening_debit,
-                 COALESCE(SUM(CASE WHEN '.$transactionTable.'.transaction_date < ? AND '.$entryTable.'.entry_type = ? THEN '.$entryTable.'.amount_minor ELSE 0 END), 0) opening_credit,
-                 COALESCE(SUM(CASE WHEN '.$transactionTable.'.transaction_date BETWEEN ? AND ? AND '.$entryTable.'.entry_type = ? THEN '.$entryTable.'.amount_minor ELSE 0 END), 0) period_debit,
-                 COALESCE(SUM(CASE WHEN '.$transactionTable.'.transaction_date BETWEEN ? AND ? AND '.$entryTable.'.entry_type = ? THEN '.$entryTable.'.amount_minor ELSE 0 END), 0) period_credit',
+                'COALESCE(SUM(CASE WHEN financial_transactions.transaction_date < ? AND transaction_entries.entry_type = ? THEN transaction_entries.amount_minor ELSE 0 END), 0) opening_debit,
+                 COALESCE(SUM(CASE WHEN financial_transactions.transaction_date < ? AND transaction_entries.entry_type = ? THEN transaction_entries.amount_minor ELSE 0 END), 0) opening_credit,
+                 COALESCE(SUM(CASE WHEN financial_transactions.transaction_date BETWEEN ? AND ? AND transaction_entries.entry_type = ? THEN transaction_entries.amount_minor ELSE 0 END), 0) period_debit,
+                 COALESCE(SUM(CASE WHEN financial_transactions.transaction_date BETWEEN ? AND ? AND transaction_entries.entry_type = ? THEN transaction_entries.amount_minor ELSE 0 END), 0) period_credit',
                 [
                     $range->localStart->toDateString(), EntryType::Debit->value,
                     $range->localStart->toDateString(), EntryType::Credit->value,
@@ -52,7 +52,7 @@ class BuildTrialBalanceReport
             'period_debit_minor' => 0, 'period_credit_minor' => 0,
             'closing_debit_minor' => 0, 'closing_credit_minor' => 0,
         ];
-        $rows = LedgerAccount::query()
+        $rows = array_values(LedgerAccount::query()
             ->whereBelongsTo($this->context->organisation())
             ->when($branch, fn (Builder $query) => $query->where(fn (Builder $query) => $query->whereNull('branch_id')->orWhere('branch_id', $branch->getKey())))
             ->orderBy('code')
@@ -93,7 +93,7 @@ class BuildTrialBalanceReport
                 $row['period_debit_minor'], $row['period_credit_minor'],
             ]) > 0)
             ->values()
-            ->all();
+            ->all());
         $summary['difference_minor'] = $summary['closing_debit_minor'] - $summary['closing_credit_minor'];
         $summary['is_balanced'] = $summary['difference_minor'] === 0;
 

@@ -31,6 +31,12 @@ test('the initial role permission matrix matches the approved foundation', funct
         ->and($collector->checkPermissionTo(FoundationPermission::GroupsView->value))->toBeTrue()
         ->and($collector->checkPermissionTo(FoundationPermission::MembersViewDocuments->value))->toBeFalse()
         ->and($collector->checkPermissionTo(FoundationPermission::RolesAssign->value))->toBeFalse()
-        ->and($member->permissions)->toBeEmpty()
+        ->and($member->permissions->pluck('name')->sort()->values()->all())->toBe([
+            FoundationPermission::NotificationPreferencesUpdateOwn->value,
+            FoundationPermission::NotificationPreferencesViewOwn->value,
+            FoundationPermission::NotificationsArchiveOwn->value,
+            FoundationPermission::NotificationsReadOwn->value,
+            FoundationPermission::NotificationsViewOwn->value,
+        ])
         ->and($platformAdmin->permissions)->toBeEmpty();
 });

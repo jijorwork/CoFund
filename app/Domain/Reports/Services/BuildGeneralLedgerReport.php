@@ -35,7 +35,7 @@ class BuildGeneralLedgerReport
             ->groupBy($entryTable.'.ledger_account_id')
             ->select($entryTable.'.ledger_account_id')
             ->selectRaw(
-                'COALESCE(SUM(CASE WHEN '.$entryTable.'.entry_type = ? THEN '.$entryTable.'.amount_minor ELSE -'.$entryTable.'.amount_minor END), 0) net_minor',
+                'COALESCE(SUM(CASE WHEN transaction_entries.entry_type = ? THEN transaction_entries.amount_minor ELSE -transaction_entries.amount_minor END), 0) net_minor',
                 [EntryType::Debit->value],
             )
             ->get()
@@ -67,7 +67,7 @@ class BuildGeneralLedgerReport
             }
         }
         $summary = ['debit_minor' => 0, 'credit_minor' => 0];
-        $rows = $entries->map(function (TransactionEntry $entry) use (&$balances, &$summary): array {
+        $rows = array_values($entries->map(function (TransactionEntry $entry) use (&$balances, &$summary): array {
             $account = $entry->ledgerAccount;
             $debit = $entry->entry_type === EntryType::Debit ? (int) $entry->amount_minor : 0;
             $credit = $entry->entry_type === EntryType::Credit ? (int) $entry->amount_minor : 0;
@@ -93,7 +93,7 @@ class BuildGeneralLedgerReport
                 'source' => ['type' => $entry->transaction->reference_type?->value, 'uuid' => $entry->transaction->reference_id],
                 'reversal_status' => $entry->transaction->status->value,
             ];
-        })->all();
+        })->all());
         $summary['difference_minor'] = $summary['debit_minor'] - $summary['credit_minor'];
 
         return ['data' => $rows, 'summary' => $summary];

@@ -43,6 +43,8 @@ use App\Http\Controllers\Api\V1\MemberDocumentController;
 use App\Http\Controllers\Api\V1\MemberLifecycleController;
 use App\Http\Controllers\Api\V1\MemberUserLinkController;
 use App\Http\Controllers\Api\V1\MemberWalletController;
+use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\PettyCashAdvanceController;
 use App\Http\Controllers\Api\V1\PettyCashRetirementController;
 use App\Http\Controllers\Api\V1\PublicReceiptVerificationController;
@@ -104,6 +106,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             })->name('context');
 
             Route::middleware('role.context')->group(function () {
+                Route::get('notifications/summary', [NotificationController::class, 'summary'])->name('notifications.summary');
+                Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+                Route::get('notifications/{notificationUuid}', [NotificationController::class, 'show'])->name('notifications.show');
+                Route::post('notifications/{notificationUuid}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+                Route::post('notifications/{notificationUuid}/unread', [NotificationController::class, 'markUnread'])->name('notifications.unread');
+                Route::post('notifications/{notificationUuid}/archive', [NotificationController::class, 'archive'])->name('notifications.archive');
+                Route::get('notification-preferences', [NotificationPreferenceController::class, 'index'])->name('notification-preferences.index');
+                Route::put('notification-preferences', [NotificationPreferenceController::class, 'store'])->name('notification-preferences.store');
+
                 Route::get('dashboard', [DashboardController::class, 'organisation'])->name('dashboard');
                 Route::get('branches/{branchUuid}/dashboard', [DashboardController::class, 'branch'])->name('branches.dashboard');
                 Route::get('dashboards/{dashboardKey}', [DashboardController::class, 'role'])

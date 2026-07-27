@@ -117,3 +117,12 @@ normal balances, trial-balance equality, account-purpose classification,
 saved-definition permission revalidation, private exports, and bounded
 dashboard queries. Production MySQL testing must verify JSON fields, aggregate
 query plans, indexes, and queued private-file storage.
+# Notification verification
+
+Phase 13 adds focused unit coverage for event registration, allow-listed
+placeholder rendering, output escaping, and trusted action URLs. Feature
+coverage should exercise dispatch deduplication, after-commit job creation,
+tenant isolation, preference inheritance, mandatory-event behaviour,
+append-only attempts, idempotent in-app delivery, email failure sanitisation,
+read/unread/archive endpoints, summary aggregates, and disabled provider
+adapters. Queue tests must use fakes and must never contact real providers.

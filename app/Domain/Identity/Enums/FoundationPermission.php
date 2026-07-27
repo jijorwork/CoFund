@@ -251,4 +251,25 @@ enum FoundationPermission: string
     case ReportsExportsView = 'reports.exports.view';
     case ReportsExportsDownload = 'reports.exports.download';
     case ReportsExportsCancel = 'reports.exports.cancel';
+    case NotificationsViewOwn = 'notifications.view_own';
+    case NotificationsReadOwn = 'notifications.read_own';
+    case NotificationsArchiveOwn = 'notifications.archive_own';
+    case NotificationPreferencesViewOwn = 'notification_preferences.view_own';
+    case NotificationPreferencesUpdateOwn = 'notification_preferences.update_own';
+    case NotificationPoliciesView = 'notification_policies.view';
+    case NotificationPoliciesUpdate = 'notification_policies.update';
+    case NotificationTemplatesView = 'notification_templates.view';
+    case NotificationTemplatesCreate = 'notification_templates.create';
+    case NotificationTemplatesUpdate = 'notification_templates.update';
+    case NotificationTemplatesActivate = 'notification_templates.activate';
+    case NotificationTemplatesRetire = 'notification_templates.retire';
+    case NotificationTemplatesPreview = 'notification_templates.preview';
+    case NotificationDispatchesView = 'notification_dispatches.view';
+    case NotificationDispatchesCancel = 'notification_dispatches.cancel';
+    case NotificationDeliveriesView = 'notification_deliveries.view';
+    case NotificationDeliveriesRetry = 'notification_deliveries.retry';
+    case NotificationReportsView = 'notification_reports.view';
+    case NotificationAuditView = 'notification_audit.view';
+    case MemberNotificationsViewHistory = 'member_notifications.view_history';
+    case SystemNotificationsManage = 'system_notifications.manage';
 }
