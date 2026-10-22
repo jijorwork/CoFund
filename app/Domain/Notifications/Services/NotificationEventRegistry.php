@@ -23,6 +23,7 @@ class NotificationEventRegistry
             $this->definition('contribution.received', NotificationCategory::Contributions, $confirmation, true, false, 'member'),
             $this->definition('contribution.receipt_issued', NotificationCategory::Contributions, $confirmation, true, false, 'member'),
             $this->definition('contribution.obligation_due', NotificationCategory::Contributions, $confirmation, false, true, 'member'),
+            $this->definition('contribution.obligation_overdue', NotificationCategory::Contributions, $confirmation, false, true, 'member', NotificationPriority::High),
             $this->definition('collector.variance_detected', NotificationCategory::Reconciliation, $inApp, true, false, 'branch_permission', NotificationPriority::High),
             $this->definition('expense.approval_required', NotificationCategory::Expenses, $inApp, false, false, 'permission', NotificationPriority::High),
             $this->definition('expense.approved', NotificationCategory::Expenses, $confirmation, false, false, 'user'),
