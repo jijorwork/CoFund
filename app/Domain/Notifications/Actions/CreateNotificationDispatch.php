@@ -33,6 +33,7 @@ class CreateNotificationDispatch
             ->first();
         $mandatory = $definition->mandatory || $policy?->mandatory_override === true;
         $channels = $this->channels($data, $policy, $mandatory);
+        $digestFrequency = $this->digestFrequency($data, $policy, $definition->digestible, $mandatory);
         $deduplicationKey = $this->deduplication->build(
             (string) $data->organisation->public_id,
             $data->eventKey,
@@ -43,7 +44,7 @@ class CreateNotificationDispatch
         );
 
         try {
-            return DB::transaction(function () use ($data, $definition, $policy, $mandatory, $channels, $deduplicationKey): NotificationDispatch {
+            return DB::transaction(function () use ($data, $definition, $policy, $mandatory, $channels, $digestFrequency, $deduplicationKey): NotificationDispatch {
                 $dispatch = NotificationDispatch::query()->create([
                     'organisation_id' => $data->organisation->getKey(),
                     'branch_id' => $data->branch?->getKey(),
@@ -64,6 +65,7 @@ class CreateNotificationDispatch
                     'policy_snapshot' => [
                         'policy_uuid' => $policy?->public_id,
                         'mandatory' => $mandatory,
+                        'digest_frequency' => $digestFrequency,
                     ],
                     'context_snapshot' => $data->context,
                     'status' => $channels === [] ? 'failed' : 'pending',
@@ -74,17 +76,18 @@ class CreateNotificationDispatch
                 ]);
 
                 foreach ($channels as $channel) {
+                    $deferForDigest = $channel === NotificationChannel::Email && $digestFrequency !== null;
                     $delivery = NotificationDelivery::query()->create([
                         'organisation_id' => $data->organisation->getKey(),
                         'notification_dispatch_id' => $dispatch->getKey(),
                         'channel' => $channel,
                         'destination_masked' => $this->maskedDestination($channel, $data),
-                        'status' => $this->isAvailable($channel, $data) ? 'pending' : 'unavailable',
+                        'status' => ! $this->isAvailable($channel, $data) ? 'unavailable' : ($deferForDigest ? 'digest_pending' : 'pending'),
                         'failure_code' => $this->isAvailable($channel, $data) ? null : 'channel_unavailable',
                         'failure_reason' => $this->isAvailable($channel, $data) ? null : 'No verified destination or provider is configured.',
                     ]);
 
-                    if ($this->isAvailable($channel, $data)) {
+                    if ($this->isAvailable($channel, $data) && ! $deferForDigest) {
                         DB::afterCommit(fn () => $this->queue($channel, (string) $delivery->public_id));
                     }
                 }
@@ -101,6 +104,25 @@ class CreateNotificationDispatch
                 ->where('deduplication_key', $deduplicationKey)
                 ->firstOrFail();
         }
+    }
+
+    private function digestFrequency(NotificationDispatchData $data, ?NotificationPolicy $policy, bool $digestible, bool $mandatory): ?string
+    {
+        if (! $digestible || $mandatory) {
+            return null;
+        }
+
+        $preference = NotificationPreference::query()
+            ->whereBelongsTo($data->organisation)
+            ->where('recipient_type', 'user')
+            ->where('user_id', $data->recipient->getKey())
+            ->where('category', $this->events->get($data->eventKey)->category->value)
+            ->where(fn ($query) => $query->whereNull('event_key')->orWhere('event_key', $data->eventKey))
+            ->orderByRaw('event_key is not null desc')
+            ->first();
+        $frequency = $preference->digest_frequency ?? $policy?->digest_mode;
+
+        return in_array($frequency, ['hourly', 'daily', 'weekly'], true) ? $frequency : null;
     }
 
     /** @return list<NotificationChannel> */

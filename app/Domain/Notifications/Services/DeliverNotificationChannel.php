@@ -62,7 +62,7 @@ class DeliverNotificationChannel
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ($delivery->channel !== $expectedChannel || in_array($delivery->status, ['delivered', 'sent', 'suppressed', 'unavailable', 'permanently_failed'], true)) {
+            if ($delivery->channel !== $expectedChannel || in_array($delivery->status, ['digest_pending', 'digest_queued', 'delivered', 'sent', 'suppressed', 'unavailable', 'permanently_failed'], true)) {
                 return null;
             }
 
@@ -212,7 +212,7 @@ class DeliverNotificationChannel
 
     private function finishDispatchIfDone(NotificationDispatch $dispatch): void
     {
-        if ($dispatch->deliveries()->whereIn('status', ['pending', 'sending', 'retry_pending'])->exists()) {
+        if ($dispatch->deliveries()->whereIn('status', ['pending', 'sending', 'retry_pending', 'digest_pending', 'digest_queued'])->exists()) {
             return;
         }
 
