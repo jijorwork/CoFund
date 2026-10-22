@@ -61,16 +61,7 @@ class ResolveRoleContext
             'role_assignment_public_id' => $assignment->public_id,
         ]);
 
-        try {
-            return $next($request);
-        } finally {
-            $this->tenantContext->clearRole();
-            Context::forget([
-                'role_id',
-                'role_assignment_id',
-                'role_assignment_public_id',
-            ]);
-        }
+        return $next($request);
     }
 
     private function forbidden(Request $request): Response

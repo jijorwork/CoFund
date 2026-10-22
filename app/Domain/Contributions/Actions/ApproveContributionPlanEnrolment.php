@@ -7,6 +7,7 @@ use App\Domain\Contributions\Enums\ApprovalStatus;
 use App\Domain\Contributions\Enums\EnrolmentStatus;
 use App\Domain\Contributions\Exceptions\InvalidContributionOperation;
 use App\Domain\Contributions\Models\MemberPlanEnrolment;
+use App\Domain\Contributions\Services\ContributionScope;
 use App\Domain\Identity\Auditing\ActingContext;
 use App\Domain\Organisations\Tenancy\TenantContext;
 use App\Models\User;
@@ -19,10 +20,13 @@ class ApproveContributionPlanEnrolment
         private EnsureDifferentActor $differentActor,
         private GenerateInitialContributionSchedule $schedule,
         private TenantContext $context,
+        private ContributionScope $scope,
     ) {}
 
     public function handle(MemberPlanEnrolment $enrolment, User $actor): MemberPlanEnrolment
     {
+        $this->scope->assertAccessibleEnrolment($enrolment);
+
         try {
             $this->differentActor->handle(
                 ActingContext::from($actor, $this->context),

@@ -106,7 +106,7 @@ class Member extends Model
     /** @return HasMany<MemberStatusHistory, $this> */
     public function statusHistories(): HasMany
     {
-        return $this->hasMany(MemberStatusHistory::class);
+        return $this->hasMany(MemberStatusHistory::class)->latest('effective_at');
     }
 
     /** @return HasMany<GroupMembership, $this> */

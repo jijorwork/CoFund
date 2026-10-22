@@ -12,6 +12,7 @@ use App\Domain\Membership\Models\Group;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Enums\OrganisationStatus;
 use App\Domain\Organisations\Enums\OrganisationType;
+use App\Domain\Subscriptions\Models\OrganisationSubscription;
 use App\Domain\Wallets\Models\Wallet;
 use App\Models\User;
 use Database\Factories\Domain\Organisations\Models\OrganisationFactory;
@@ -97,6 +98,18 @@ class Organisation extends Model
     public function organisationAccesses(): HasMany
     {
         return $this->hasMany(OrganisationUser::class);
+    }
+
+    /** @return HasMany<OrganisationStatusHistory, $this> */
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(OrganisationStatusHistory::class)->latest();
+    }
+
+    /** @return HasMany<OrganisationSubscription, $this> */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(OrganisationSubscription::class);
     }
 
     /**

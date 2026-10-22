@@ -272,4 +272,14 @@ enum FoundationPermission: string
     case NotificationAuditView = 'notification_audit.view';
     case MemberNotificationsViewHistory = 'member_notifications.view_history';
     case SystemNotificationsManage = 'system_notifications.manage';
+    case FilamentAccess = 'filament.access';
+    case FilamentDashboardView = 'filament.dashboard.view';
+    case FilamentGlobalSearchUse = 'filament.global_search.use';
+    case FilamentOrganisationManage = 'filament.organisation.manage';
+    case FilamentRolesManage = 'filament.roles.manage';
+    case FilamentSettingsManage = 'filament.settings.manage';
+    case FilamentReportsRun = 'filament.reports.run';
+    case FilamentReportsExport = 'filament.reports.export';
+    case FilamentAuditView = 'filament.audit.view';
+    case FilamentDataIntegrityView = 'filament.data_integrity.view';
 }

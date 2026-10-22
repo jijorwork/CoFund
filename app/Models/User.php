@@ -3,12 +3,17 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Domain\Identity\Enums\FoundationPermission;
+use App\Domain\Identity\Enums\SystemRole;
 use App\Domain\Identity\Models\OrganisationUserRole;
+use App\Domain\Identity\Services\ListAvailableUserRoleContexts;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Models\Organisation;
 use App\Domain\Organisations\Models\OrganisationUser;
 use App\Domain\Wallets\Models\Wallet;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -23,6 +28,7 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @property int $id
@@ -39,10 +45,10 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements PasskeyUser
+class User extends Authenticatable implements FilamentUser, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasUuids, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, HasUuids, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
      * @return list<string>
@@ -113,5 +119,28 @@ class User extends Authenticatable implements PasskeyUser
         return Str::length($initials) > 1
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($this->email_verified_at === null) {
+            return false;
+        }
+
+        if ($panel->getId() === 'platform') {
+            return $this->hasRole(SystemRole::PlatformAdmin->value, 'web');
+        }
+
+        if ($panel->getId() !== 'admin') {
+            return false;
+        }
+
+        return app(ListAvailableUserRoleContexts::class)
+            ->forUser($this)
+            ->contains(fn (OrganisationUserRole $assignment): bool => $assignment->role
+                ->checkPermissionTo(
+                    FoundationPermission::FilamentAccess->value,
+                    'web',
+                ));
     }
 }

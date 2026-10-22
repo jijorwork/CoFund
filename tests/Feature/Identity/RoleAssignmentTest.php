@@ -1,7 +1,9 @@
 <?php
 
 use App\Domain\Identity\Actions\AssignRoleToUser;
+use App\Domain\Identity\Actions\ReinstateUserRole;
 use App\Domain\Identity\Actions\RevokeUserRole;
+use App\Domain\Identity\Actions\SuspendUserRole;
 use App\Domain\Identity\Enums\RoleAssignmentStatus;
 use App\Domain\Identity\Enums\SystemRole;
 use App\Domain\Identity\Exceptions\InvalidRoleAssignment;
@@ -157,3 +159,72 @@ test('inactive and out of date assignments are not currently valid', function (
     'future dated' => 'futureDated',
     'pending' => 'pending',
 ]);
+
+test('role suspension and reinstatement enforce audited context permissions and transitions', function () {
+    $actor = User::factory()->create();
+    $target = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    establishAssigningContext($actor, $organisation);
+    OrganisationUser::factory()->for($target)->for($organisation)->create();
+    $assignment = app(AssignRoleToUser::class)->handle(
+        $actor,
+        $organisation,
+        $target,
+        Role::findByName(SystemRole::Auditor->value),
+    );
+
+    $suspended = app(SuspendUserRole::class)->handle($assignment);
+    $reinstated = app(ReinstateUserRole::class)->handle($suspended->load([
+        'organisation',
+        'branch',
+        'user',
+        'role',
+    ]));
+
+    expect($suspended->status)->toBe(RoleAssignmentStatus::Suspended)
+        ->and($suspended->active_scope_key)->toBeNull()
+        ->and($reinstated->status)->toBe(RoleAssignmentStatus::Active)
+        ->and($reinstated->active_scope_key)->not->toBeNull();
+
+    expect(fn () => app(ReinstateUserRole::class)->handle($reinstated))
+        ->toThrow(InvalidRoleAssignment::class);
+});
+
+test('branch role assignment cannot escape the verified active branch context', function () {
+    $actor = User::factory()->create();
+    $target = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    $activeBranch = Branch::factory()->for($organisation)->create();
+    $otherBranch = Branch::factory()->for($organisation)->create();
+    OrganisationUser::factory()->for($target)->for($organisation)->create();
+    establishAssigningContext($actor, $organisation, $activeBranch);
+
+    expect(fn () => app(AssignRoleToUser::class)->handle(
+        $actor,
+        $organisation,
+        $target,
+        Role::findByName(SystemRole::Collector->value),
+        $otherBranch,
+    ))->toThrow(InvalidRoleAssignment::class);
+
+    expect(fn () => app(AssignRoleToUser::class)->handle(
+        $actor,
+        $organisation,
+        $target,
+        Role::findByName(SystemRole::Collector->value),
+    ))->toThrow(InvalidRoleAssignment::class);
+});
+
+test('the active role context cannot revoke or suspend itself', function () {
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    $assignment = establishAssigningContext($actor, $organisation);
+
+    expect(fn () => app(RevokeUserRole::class)->handle(
+        $assignment,
+        $actor,
+        'Attempted self revocation',
+    ))->toThrow(InvalidRoleAssignment::class)
+        ->and(fn () => app(SuspendUserRole::class)->handle($assignment))
+        ->toThrow(InvalidRoleAssignment::class);
+});

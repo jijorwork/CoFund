@@ -15,10 +15,12 @@ class AssignUserToOrganisation
         User $user,
         OrganisationAccessStatus $status = OrganisationAccessStatus::Invited,
         ?CarbonInterface $joinedAt = null,
+        ?User $grantedBy = null,
     ): OrganisationUser {
         return OrganisationUser::query()->create([
             'organisation_id' => $organisation->getKey(),
             'user_id' => $user->getKey(),
+            'granted_by_user_id' => $grantedBy?->getKey(),
             'status' => $status,
             'joined_at' => $joinedAt,
         ]);

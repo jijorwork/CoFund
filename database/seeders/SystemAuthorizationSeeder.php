@@ -510,7 +510,44 @@ class SystemAuthorizationSeeder extends Seeder
             ...$permissions,
             ...$this->reportingPermissionsFor($role),
             ...$this->notificationPermissionsFor($role),
+            ...$this->filamentPermissionsFor($role),
         ]));
+    }
+
+    /** @return list<string> */
+    private function filamentPermissionsFor(SystemRole $role): array
+    {
+        $panel = [
+            FoundationPermission::FilamentAccess->value,
+            FoundationPermission::FilamentDashboardView->value,
+            FoundationPermission::FilamentGlobalSearchUse->value,
+        ];
+
+        return match ($role) {
+            SystemRole::PlatformAdmin, SystemRole::Member => [],
+            SystemRole::OrganisationAdmin => [
+                ...$panel,
+                FoundationPermission::FilamentOrganisationManage->value,
+                FoundationPermission::FilamentRolesManage->value,
+                FoundationPermission::FilamentSettingsManage->value,
+                FoundationPermission::FilamentReportsRun->value,
+                FoundationPermission::FilamentReportsExport->value,
+            ],
+            SystemRole::Auditor => [
+                ...$panel,
+                FoundationPermission::FilamentReportsRun->value,
+                FoundationPermission::FilamentAuditView->value,
+                FoundationPermission::FilamentDataIntegrityView->value,
+            ],
+            SystemRole::BranchManager => [
+                ...$panel,
+                FoundationPermission::FilamentReportsRun->value,
+            ],
+            SystemRole::Treasurer, SystemRole::MembershipOfficer,
+            SystemRole::Collector, SystemRole::LoanOfficer,
+            SystemRole::WelfareOfficer, SystemRole::Verifier,
+            SystemRole::Approver => $panel,
+        };
     }
 
     /** @return list<string> */

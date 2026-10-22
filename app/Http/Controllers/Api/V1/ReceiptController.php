@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Collections\Actions\PrepareReceiptReissue;
 use App\Domain\Collections\Models\Receipt;
 use App\Domain\Collections\Queries\FindReceiptByUuid;
 use App\Domain\Collections\Services\BuildContributionReceiptView;
@@ -80,14 +81,16 @@ class ReceiptController extends Controller
         Request $request,
         string $receiptUuid,
         FindReceiptByUuid $receipts,
-        RoleAuthorization $authorization,
+        PrepareReceiptReissue $reissue,
     ): ReceiptResource {
-        $authorization->authorize(FoundationPermission::ReceiptsReissue->value);
+        $prepared = $reissue->handle(
+            $receipts->handle($receiptUuid) ?? abort(404),
+        );
 
-        return ReceiptResource::make($receipts->handle($receiptUuid) ?? abort(404))
+        return ReceiptResource::make($prepared['receipt'])
             ->additional(['meta' => [
                 'request_id' => ApiResponse::requestId($request),
-                'reissued_at' => now()->toIso8601String(),
+                'reissued_at' => $prepared['reissued_at']->toIso8601String(),
             ]]);
     }
 }

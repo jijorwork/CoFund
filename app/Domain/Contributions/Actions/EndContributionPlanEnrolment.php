@@ -7,18 +7,23 @@ use App\Domain\Contributions\Enums\ObligationStatus;
 use App\Domain\Contributions\Exceptions\InvalidContributionOperation;
 use App\Domain\Contributions\Models\ContributionObligation;
 use App\Domain\Contributions\Models\MemberPlanEnrolment;
+use App\Domain\Contributions\Services\ContributionScope;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 class EndContributionPlanEnrolment
 {
+    public function __construct(private ContributionScope $scope) {}
+
     public function handle(
         MemberPlanEnrolment $enrolment,
         User $actor,
         CarbonImmutable $effectiveDate,
         string $reason,
     ): MemberPlanEnrolment {
+        $this->scope->assertAccessibleEnrolment($enrolment);
+
         if (! in_array($enrolment->status, [EnrolmentStatus::Active, EnrolmentStatus::Suspended], true)) {
             throw new InvalidContributionOperation;
         }

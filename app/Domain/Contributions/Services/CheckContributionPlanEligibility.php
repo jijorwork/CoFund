@@ -26,6 +26,7 @@ class CheckContributionPlanEligibility
         CarbonImmutable $startDate,
         ?CarbonImmutable $endDate,
     ): void {
+        $this->scope->assertAccessiblePlan($plan);
         $this->scope->applyEnrolmentAccess(Member::query()->whereKey($member))->first()
             ?? throw new InvalidContributionOperation;
 

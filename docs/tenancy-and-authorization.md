@@ -120,3 +120,15 @@ Saved definitions do not preserve authority: running or exporting rechecks the
 active role and scope. Export jobs rebuild verified context from an active role
 assignment and fail safely if it expires. Private exports remain owner-scoped
 and every download is reauthorised.
+
+## Filament context
+
+The administration panel reuses `active_context` and never accepts internal
+organisation, branch, or role IDs. `EnsureFilamentContext` selects a safe
+initial assignment only from `ListAvailableUserRoleContexts`.
+`ResolveTenantContext` and `ResolveRoleContext` then revalidate that selection
+on every persistent Livewire request.
+
+Panel access requires a verified email, an active organisation relationship, a
+currently valid role assignment, and `filament.access`. Resource queries remain
+explicitly tenant-scoped even when navigation is hidden.

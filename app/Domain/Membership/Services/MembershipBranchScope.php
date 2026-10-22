@@ -14,7 +14,7 @@ class MembershipBranchScope
 
     public function isBranchRestricted(): bool
     {
-        return $this->tenantContext->roleAssignment()->branch_id !== null;
+        return $this->tenantContext->branch() !== null;
     }
 
     /**

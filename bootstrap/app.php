@@ -10,6 +10,7 @@ use App\Domain\Identity\Exceptions\PermissionDenied;
 use App\Domain\Loans\Exceptions\InvalidLoanOperation;
 use App\Domain\Membership\Exceptions\InvalidMembershipOperation;
 use App\Domain\Wallets\Exceptions\InvalidWalletOperation;
+use App\Http\Middleware\AddApiSecurityHeaders;
 use App\Http\Middleware\EnsureApiRequestId;
 use App\Http\Middleware\ResolveRoleContext;
 use App\Http\Middleware\ResolveTenantContext;
@@ -23,6 +24,9 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -34,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [
             EnsureApiRequestId::class,
+            AddApiSecurityHeaders::class,
         ]);
 
         $middleware->alias([
@@ -204,5 +209,44 @@ return Application::configure(basePath: dirname(__DIR__))
                 message: 'The requested resource was not found.',
                 status: 404,
             );
+        });
+
+        $exceptions->render(function (NotFoundHttpException $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return ApiResponse::error(
+                request: $request,
+                code: 'not_found',
+                message: 'The requested endpoint was not found.',
+                status: 404,
+            );
+        });
+
+        $exceptions->render(function (MethodNotAllowedHttpException $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return ApiResponse::error(
+                request: $request,
+                code: 'method_not_allowed',
+                message: 'The HTTP method is not supported for this endpoint.',
+                status: 405,
+            )->withHeaders($exception->getHeaders());
+        });
+
+        $exceptions->render(function (TooManyRequestsHttpException $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return ApiResponse::error(
+                request: $request,
+                code: 'rate_limit_exceeded',
+                message: 'Too many requests. Please retry later.',
+                status: 429,
+            )->withHeaders($exception->getHeaders());
         });
     })->create();

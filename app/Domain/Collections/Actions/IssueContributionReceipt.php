@@ -37,7 +37,7 @@ class IssueContributionReceipt
             'issued_by_user_id' => $actor->getKey(),
             'member_id' => $payment->member_id,
             'payer_name' => $payment->payer_name,
-            'payment_method' => $payment->payment_method,
+            'payment_method' => $payment->payment_method->value,
             'amount_minor' => $payment->amount_minor,
             'currency_code' => $payment->currency_code,
             'verification_code' => $verificationCode,

@@ -3,6 +3,8 @@
 namespace App\Domain\Contributions\Services;
 
 use App\Domain\Contributions\Exceptions\InvalidContributionOperation;
+use App\Domain\Contributions\Models\ContributionPlan;
+use App\Domain\Contributions\Models\MemberPlanEnrolment;
 use App\Domain\Membership\Models\Group;
 use App\Domain\Organisations\Models\Branch;
 use App\Domain\Organisations\Tenancy\TenantContext;
@@ -60,6 +62,33 @@ class ContributionScope
             || ($group !== null && $group->organisation_id !== $organisationId)
             || ($group?->branch_id !== null && $branch?->getKey() !== $group->branch_id)
             || ($this->isBranchRestricted() && $branch?->getKey() !== $this->context->branch()?->getKey())
+        ) {
+            throw new InvalidContributionOperation;
+        }
+    }
+
+    public function assertAccessiblePlan(ContributionPlan $plan): void
+    {
+        if (
+            $plan->organisation_id !== $this->context->organisation()->getKey()
+            || (
+                $this->isBranchRestricted()
+                && $plan->branch_id !== null
+                && $plan->branch_id !== $this->context->branch()?->getKey()
+            )
+        ) {
+            throw new InvalidContributionOperation;
+        }
+    }
+
+    public function assertAccessibleEnrolment(MemberPlanEnrolment $enrolment): void
+    {
+        if (
+            $enrolment->organisation_id !== $this->context->organisation()->getKey()
+            || (
+                $this->isBranchRestricted()
+                && $enrolment->branch_id !== $this->context->branch()?->getKey()
+            )
         ) {
             throw new InvalidContributionOperation;
         }

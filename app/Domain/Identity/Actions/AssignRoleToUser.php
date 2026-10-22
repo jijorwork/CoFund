@@ -62,6 +62,12 @@ class AssignRoleToUser
             throw new InvalidRoleAssignment('The selected branch does not belong to the organisation.');
         }
 
+        $activeBranch = $this->tenantContext->branch();
+
+        if ($activeBranch !== null && ($branch === null || ! $branch->is($activeBranch))) {
+            throw new InvalidRoleAssignment('The role assignment must remain within the active branch context.');
+        }
+
         if ($endsAt !== null && $startsAt !== null && $endsAt->lessThanOrEqualTo($startsAt)) {
             throw new InvalidRoleAssignment('The assignment end must be after its start.');
         }

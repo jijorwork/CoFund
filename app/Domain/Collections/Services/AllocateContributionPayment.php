@@ -2,6 +2,7 @@
 
 namespace App\Domain\Collections\Services;
 
+use App\Domain\Collections\Data\ContributionAllocationData;
 use App\Domain\Collections\Data\ContributionPaymentData;
 use App\Domain\Collections\Data\PaymentAllocationData;
 use App\Domain\Collections\Data\PaymentAllocationResult;
@@ -16,6 +17,21 @@ class AllocateContributionPayment
 {
     public function allocate(ContributionPaymentData $data): PaymentAllocationResult
     {
+        return $this->calculate(
+            ContributionAllocationData::fromPayment($data),
+            lockForUpdate: true,
+        );
+    }
+
+    public function preview(ContributionAllocationData $data): PaymentAllocationResult
+    {
+        return $this->calculate($data, lockForUpdate: false);
+    }
+
+    private function calculate(
+        ContributionAllocationData $data,
+        bool $lockForUpdate,
+    ): PaymentAllocationResult {
         if ($data->allocationStrategy === PaymentAllocationStrategy::LeaveUnallocated) {
             return new PaymentAllocationResult([], 0, $data->amountMinor);
         }
@@ -30,7 +46,7 @@ class AllocateContributionPayment
         $obligations = ContributionObligation::query()
             ->whereBelongsTo($enrolment, 'enrolment')
             ->whereNotIn('schedule_status', [ObligationStatus::Cancelled, ObligationStatus::Waived])
-            ->lockForUpdate()
+            ->when($lockForUpdate, fn ($query) => $query->lockForUpdate())
             ->get();
 
         if ($data->allocationStrategy === PaymentAllocationStrategy::SelectedObligations) {
@@ -87,7 +103,7 @@ class AllocateContributionPayment
     /**
      * @param  Collection<int, ContributionObligation>  $obligations
      */
-    private function selected(ContributionPaymentData $data, Collection $obligations): PaymentAllocationResult
+    private function selected(ContributionAllocationData $data, Collection $obligations): PaymentAllocationResult
     {
         if ($data->selectedAllocations === []) {
             throw new InvalidContributionPayment('Selected obligations are required.');

@@ -68,17 +68,7 @@ class ResolveTenantContext
             'branch_public_id' => $branch?->public_id,
         ]);
 
-        try {
-            return $next($request);
-        } finally {
-            $this->tenantContext->clear();
-            Context::forget([
-                'organisation_id',
-                'organisation_public_id',
-                'branch_id',
-                'branch_public_id',
-            ]);
-        }
+        return $next($request);
     }
 
     private function resolveBranch(mixed $branchPublicId, Organisation $organisation): ?Branch

@@ -32,7 +32,7 @@ class ReceiptFactory extends Factory
             'issued_at' => now(),
             'issued_by_user_id' => User::factory(),
             'member_id' => $payment->member_id,
-            'payment_method' => $payment->payment_method,
+            'payment_method' => $payment->payment_method->value,
             'amount_minor' => $payment->amount_minor,
             'currency_code' => $payment->currency_code,
             'verification_code' => $code,

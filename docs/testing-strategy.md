@@ -126,3 +126,42 @@ tenant isolation, preference inheritance, mandatory-event behaviour,
 append-only attempts, idempotent in-app delivery, email failure sanitisation,
 read/unread/archive endpoints, summary aggregates, and disabled provider
 adapters. Queue tests must use fakes and must never contact real providers.
+
+## Filament administration verification
+
+Feature tests cover panel admission, safe initial context selection, denial of
+member-only roles, organisation and branch isolation, public-UUID direct URLs,
+responsive-critical branch columns, persistent context display, lazy-widget
+context, and the absence of financial or branch CRUD capabilities. Filament
+pages and widgets are tested as Livewire components. Browser smoke coverage
+verifies the active-context top bar, lazy dashboard rendering, read-only branch
+navigation, and absence of horizontal overflow at a 390-pixel viewport.
+Stage 2 adds organisation profile, organisation access, and role-assignment
+navigation and direct-URL authorization; foreign-UUID rejection; active-branch
+relevance; organisation-wide role visibility; platform-administrator
+exclusion; responsive-critical columns; public access UUID generation; and
+eager-loaded display relationships. Mutation coverage verifies domain-action
+delegation, exact-UUID access grants, actor attribution, permission-hidden
+actions, non-platform role assignment, branch containment, reasoned revocation,
+and active-context self-lockout prevention. Further file workflows must add
+secure-download coverage.
+
+`php artisan test` is isolated by `phpunit.xml` using in-memory SQLite. Artisan
+does not read PHPUnit's environment variables, so never assume
+`php artisan migrate:fresh --env=testing` is isolated. For a migration-only
+verification, explicitly supply a disposable SQLite database path:
+
+```bash
+env DB_CONNECTION=sqlite DB_DATABASE=/absolute/disposable/path.sqlite \
+    php artisan migrate:fresh --env=testing --no-interaction
+```
+
+## Phase 15 API contract verification
+
+Feature coverage treats registered `/api/v1` routes as an executable contract.
+It verifies that anonymous routes remain an explicit allow-list, all private
+routes retain authentication, tenant and role middleware cannot be dropped from
+business routes, the named limiter applies globally, request IDs are sanitized,
+defensive headers are emitted, and routing failures retain the standard error
+envelope. The documentation generator is exercised and every registered method
+must appear in `docs/openapi.json`.

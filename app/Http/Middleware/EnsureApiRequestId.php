@@ -17,7 +17,11 @@ class EnsureApiRequestId
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $requestId = $request->headers->get('X-Request-ID') ?: (string) Str::uuid7();
+        $providedRequestId = $request->headers->get('X-Request-ID');
+        $requestId = is_string($providedRequestId)
+            && preg_match('/\A[A-Za-z0-9][A-Za-z0-9._:-]{0,99}\z/', $providedRequestId) === 1
+                ? $providedRequestId
+                : (string) Str::uuid7();
 
         $request->attributes->set('request_id', $requestId);
         Context::add('request_id', $requestId);

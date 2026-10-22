@@ -7,6 +7,7 @@ use App\Domain\Membership\Exceptions\InvalidMembershipOperation;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Membership\Services\MembershipBranchScope;
 use App\Domain\Organisations\Services\OrganisationAccessService;
+use App\Domain\Organisations\Tenancy\TenantContext;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -15,10 +16,15 @@ class LinkMemberToUser
     public function __construct(
         private OrganisationAccessService $organisationAccess,
         private MembershipBranchScope $branchScope,
+        private TenantContext $tenantContext,
     ) {}
 
     public function handle(Member $member, User $user): Member
     {
+        if ($member->organisation_id !== $this->tenantContext->organisation()->getKey()) {
+            throw new InvalidMembershipOperation;
+        }
+
         $this->branchScope->assertAccessibleRecord($member->branch_id);
 
         if (! $this->organisationAccess->hasActiveAccess($user, $member->organisation)) {
@@ -28,7 +34,11 @@ class LinkMemberToUser
         return DB::transaction(function () use ($member, $user): Member {
             $locked = Member::query()->lockForUpdate()->whereKey($member->getKey())->firstOrFail();
 
-            if ($locked->status === MemberStatus::Exited || $locked->status === MemberStatus::Deceased) {
+            if (
+                $locked->organisation_id !== $this->tenantContext->organisation()->getKey()
+                || $locked->status === MemberStatus::Exited
+                || $locked->status === MemberStatus::Deceased
+            ) {
                 throw new InvalidMembershipOperation;
             }
 

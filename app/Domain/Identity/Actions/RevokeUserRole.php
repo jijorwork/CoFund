@@ -29,6 +29,16 @@ class RevokeUserRole
             throw new InvalidRoleAssignment;
         }
 
+        if ($this->tenantContext->roleAssignment()->is($assignment)) {
+            throw new InvalidRoleAssignment('The active role context cannot revoke itself.');
+        }
+
+        $branch = $this->tenantContext->branch();
+
+        if ($branch !== null && $assignment->branch_id !== null && $assignment->branch_id !== $branch->getKey()) {
+            throw new InvalidRoleAssignment;
+        }
+
         return DB::transaction(function () use ($assignment, $revokingUser, $reason): OrganisationUserRole {
             $lockedAssignment = OrganisationUserRole::query()
                 ->lockForUpdate()

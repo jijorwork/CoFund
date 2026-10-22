@@ -5,12 +5,17 @@ namespace App\Domain\Contributions\Actions;
 use App\Domain\Contributions\Enums\EnrolmentStatus;
 use App\Domain\Contributions\Exceptions\InvalidContributionOperation;
 use App\Domain\Contributions\Models\MemberPlanEnrolment;
+use App\Domain\Contributions\Services\ContributionScope;
 use App\Models\User;
 
 class CancelContributionPlanEnrolment
 {
+    public function __construct(private ContributionScope $scope) {}
+
     public function handle(MemberPlanEnrolment $enrolment, User $actor, ?string $reason): MemberPlanEnrolment
     {
+        $this->scope->assertAccessibleEnrolment($enrolment);
+
         if ($enrolment->status !== EnrolmentStatus::Pending) {
             throw new InvalidContributionOperation;
         }

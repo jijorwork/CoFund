@@ -8,12 +8,16 @@ use App\Domain\Membership\Models\Group;
 use App\Domain\Membership\Models\GroupMembership;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Membership\Services\MembershipBranchScope;
+use App\Domain\Organisations\Tenancy\TenantContext;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class AddMemberToGroup
 {
-    public function __construct(private MembershipBranchScope $branchScope) {}
+    public function __construct(
+        private TenantContext $tenantContext,
+        private MembershipBranchScope $branchScope,
+    ) {}
 
     public function handle(Group $group, Member $member, User $actor): GroupMembership
     {
@@ -21,7 +25,9 @@ class AddMemberToGroup
         $this->branchScope->assertAccessibleRecord($member->branch_id);
 
         if (
-            $group->organisation_id !== $member->organisation_id
+            $group->organisation_id !== $this->tenantContext->organisation()->getKey()
+            || $member->organisation_id !== $this->tenantContext->organisation()->getKey()
+            || $group->organisation_id !== $member->organisation_id
             || ($group->branch_id !== null && $member->branch_id !== $group->branch_id)
         ) {
             throw new InvalidMembershipOperation;

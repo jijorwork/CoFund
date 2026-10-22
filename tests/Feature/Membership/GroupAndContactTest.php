@@ -2,15 +2,20 @@
 
 use App\Domain\Membership\Actions\AddMemberContact;
 use App\Domain\Membership\Actions\AddMemberToGroup;
+use App\Domain\Membership\Actions\CreateGroup;
 use App\Domain\Membership\Actions\RemoveMemberFromGroup;
+use App\Domain\Membership\Actions\UpdateGroup;
 use App\Domain\Membership\Actions\UpdateMemberContact;
 use App\Domain\Membership\Enums\GroupMembershipStatus;
+use App\Domain\Membership\Enums\GroupStatus;
+use App\Domain\Membership\Enums\GroupType;
 use App\Domain\Membership\Enums\MemberContactType;
 use App\Domain\Membership\Exceptions\InvalidMembershipOperation;
 use App\Domain\Membership\Models\Group;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Membership\Models\MemberContact;
 use App\Domain\Membership\Services\BeneficiaryAllocationService;
+use App\Domain\Organisations\Models\Branch;
 use App\Domain\Organisations\Models\Organisation;
 use App\Models\User;
 use Database\Seeders\SystemAuthorizationSeeder;
@@ -59,6 +64,63 @@ test('cross organisation group membership is rejected', function () {
     app(AddMemberToGroup::class)->handle(
         Group::factory()->for($organisation)->create(),
         Member::factory()->for(Organisation::factory())->create(),
+        $actor,
+    );
+})->throws(InvalidMembershipOperation::class);
+
+test('group actions derive ownership normalize codes and protect system fields', function () {
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    $branch = Branch::factory()->for($organisation)->create();
+    establishMembershipDomainContext($actor, $organisation);
+
+    $group = app(CreateGroup::class)->handle($actor, [
+        'name' => 'Market Circle',
+        'code' => 'market',
+        'group_type' => GroupType::SusuCircle->value,
+        'description' => 'Market traders',
+        'organisation_id' => Organisation::factory()->create()->id,
+        'branch_id' => Branch::factory()->create()->id,
+        'created_by_user_id' => User::factory()->create()->id,
+    ], $branch);
+
+    $updated = app(UpdateGroup::class)->handle($group, [
+        'name' => 'Updated Circle',
+        'code' => 'updated',
+        'description' => 'Updated',
+        'organisation_id' => Organisation::factory()->create()->id,
+        'branch_id' => Branch::factory()->create()->id,
+        'created_by_user_id' => User::factory()->create()->id,
+    ], $branch);
+
+    expect($updated->name)->toBe('Updated Circle')
+        ->and($updated->code)->toBe('UPDATED')
+        ->and($updated->organisation_id)->toBe($organisation->id)
+        ->and($updated->branch_id)->toBe($branch->id)
+        ->and($updated->created_by_user_id)->toBe($actor->id)
+        ->and($updated->status)->toBe(GroupStatus::Active);
+});
+
+test('group updates reject foreign records in organisation-wide context', function () {
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    establishMembershipDomainContext($actor, $organisation);
+    $foreignGroup = Group::factory()->for(Organisation::factory())->create();
+
+    app(UpdateGroup::class)->handle($foreignGroup, [
+        'name' => 'Tampered Group',
+    ], null);
+})->throws(InvalidMembershipOperation::class);
+
+test('group membership rejects two foreign records even when their organisations match', function () {
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    establishMembershipDomainContext($actor, $organisation);
+    $foreignOrganisation = Organisation::factory()->create();
+
+    app(AddMemberToGroup::class)->handle(
+        Group::factory()->for($foreignOrganisation)->create(),
+        Member::factory()->for($foreignOrganisation)->create(),
         $actor,
     );
 })->throws(InvalidMembershipOperation::class);

@@ -27,10 +27,12 @@ and branch scope, and derive wallet positions from posted ledger entries.
 ## Surface and authentication
 
 - All first-party business endpoints are rooted at `/api/v1`; route names use `api.v1.*`.
+- `php artisan api:documentation` regenerates the authoritative route inventory and OpenAPI 3.1 contract from Laravel's registered routes.
 - JSON is the only representation unless a dedicated export endpoint documents another type.
 - Current first-party API authentication uses Fortify's `web` session guard and CSRF protection. Token authentication for external clients remains undecided.
 - `GET /api/v1/auth/contexts` lists valid choices and `POST /api/v1/auth/context` selects exact organisation, optional branch, and assignment UUIDs. Body/query numeric ownership IDs never establish authority.
 - Staff routes run `web`, `auth`, tenant resolution, then role resolution. Health has no context middleware; context list/switch require authentication but no preselected role.
+- Every v1 route uses the named `api` rate limiter: 120 requests per minute by default, keyed by authenticated user or public IP.
 
 ## Responses
 
@@ -59,6 +61,11 @@ Errors use a consistent object:
 ```
 
 Use `401` for unauthenticated, `403` for authenticated but unauthorized/context-invalid, `404` where a scoped resource is absent, `409` for state/idempotency conflict, `422` for validation, and `429` for throttling. Messages are safe for clients; diagnostics remain in logs.
+
+Client-supplied `X-Request-ID` values are limited to 100 safe correlation
+characters; invalid values are replaced. Responses echo the accepted request
+ID and disable MIME sniffing, framing, referrer disclosure, and storage in
+shared or browser caches.
 
 ## Listing conventions
 
