@@ -7,6 +7,8 @@ use App\Domain\Approvals\Enums\ApprovalDecisionOutcome;
 use App\Domain\Approvals\Enums\ApprovalRequestStatus;
 use App\Domain\Approvals\Exceptions\InvalidApprovalOperation;
 use App\Domain\Approvals\Models\ApprovalRequest;
+use App\Domain\Identity\Auditing\Models\AuditEvent;
+use App\Domain\Identity\Auditing\RecordApprovalAudit;
 use App\Domain\Identity\Enums\FoundationPermission;
 use App\Domain\Identity\Exceptions\PermissionDenied;
 use App\Domain\Identity\Models\OrganisationUserRole;
@@ -50,6 +52,7 @@ test('approval requests snapshot steps and require distinct decision makers', fu
             FoundationPermission::MembersSuspend->value,
         ])
         ->and($request->subject_public_id)->toBe($member->public_id);
+    expect(AuditEvent::query()->sole()->event_key)->toBe('approval.submitted');
 
     expect(fn () => $submit->handle($requester, $member, memberApprovalDefinition()))
         ->toThrow(InvalidApprovalOperation::class);
@@ -78,6 +81,8 @@ test('approval requests snapshot steps and require distinct decision makers', fu
         ->and($request->active_subject_key)->toBeNull()
         ->and($request->decisions()->pluck('decided_by_user_id')->all())
         ->toBe([$firstApprover->id, $secondApprover->id]);
+    expect(AuditEvent::query()->orderBy('id')->pluck('event_key')->all())
+        ->toBe(['approval.submitted', 'approval.decided', 'approval.decided']);
 
     $firstDecision = $request->decisions()->firstOrFail();
     expect(fn () => $firstDecision->update(['reason' => 'changed']))
@@ -152,6 +157,42 @@ test('rejection requires a reason and closes the approval request', function () 
     expect($request->refresh()->status)->toBe(ApprovalRequestStatus::Rejected)
         ->and($request->decisions()->sole()->reason)->toBe('Insufficient evidence')
         ->and($request->active_subject_key)->toBeNull();
+    expect(AuditEvent::query()->latest('id')->firstOrFail()->details['outcome'])->toBe('rejected');
+});
+
+test('a failed audit write rolls back an approval decision', function () {
+    $organisation = Organisation::factory()->create();
+    $member = Member::factory()->for($organisation)->create();
+    $requester = User::factory()->create();
+    establishMembershipDomainContext($requester, $organisation);
+    $request = app(SubmitApprovalRequest::class)->handle($requester, $member, memberApprovalDefinition());
+
+    $approver = User::factory()->create();
+    establishMembershipDomainContext($approver, $organisation);
+    $audit = Mockery::mock(RecordApprovalAudit::class);
+    $audit->shouldReceive('handle')->once()->andThrow(new RuntimeException('Audit unavailable'));
+    app()->instance(RecordApprovalAudit::class, $audit);
+
+    expect(fn () => app(DecideApprovalRequest::class)->handle($request, $approver, ApprovalDecisionOutcome::Approved))
+        ->toThrow(RuntimeException::class);
+    expect($request->refresh()->status)->toBe(ApprovalRequestStatus::Pending)
+        ->and($request->decisions()->count())->toBe(0)
+        ->and(AuditEvent::query()->count())->toBe(1);
+});
+
+test('a failed audit write rolls back an approval submission', function () {
+    $organisation = Organisation::factory()->create();
+    $member = Member::factory()->for($organisation)->create();
+    $requester = User::factory()->create();
+    establishMembershipDomainContext($requester, $organisation);
+    $audit = Mockery::mock(RecordApprovalAudit::class);
+    $audit->shouldReceive('handle')->once()->andThrow(new RuntimeException('Audit unavailable'));
+    app()->instance(RecordApprovalAudit::class, $audit);
+
+    expect(fn () => app(SubmitApprovalRequest::class)->handle($requester, $member, memberApprovalDefinition()))
+        ->toThrow(RuntimeException::class);
+    expect(ApprovalRequest::query()->count())->toBe(0)
+        ->and(AuditEvent::query()->count())->toBe(0);
 });
 
 test('approval decisions require the active branch and the step permission', function () {

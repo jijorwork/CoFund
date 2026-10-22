@@ -7,6 +7,8 @@ use App\Domain\Approvals\Enums\ApprovalRequestStatus;
 use App\Domain\Approvals\Exceptions\InvalidApprovalOperation;
 use App\Domain\Approvals\Models\ApprovalDecision;
 use App\Domain\Approvals\Models\ApprovalRequest;
+use App\Domain\Identity\Auditing\ActingContext;
+use App\Domain\Identity\Auditing\RecordApprovalAudit;
 use App\Domain\Identity\Services\RoleAuthorization;
 use App\Domain\Organisations\Tenancy\TenantContext;
 use App\Models\User;
@@ -17,6 +19,7 @@ class DecideApprovalRequest
     public function __construct(
         private TenantContext $context,
         private RoleAuthorization $authorization,
+        private RecordApprovalAudit $audit,
     ) {}
 
     public function handle(
@@ -72,6 +75,12 @@ class DecideApprovalRequest
             } else {
                 $locked->update(['current_step_number' => $step + 1]);
             }
+
+            $this->audit->handle($locked, ActingContext::from($actor, $this->context), 'approval.decided', [
+                'step_number' => $step,
+                'outcome' => $outcome->value,
+                'reason' => $reason,
+            ]);
 
             return $locked->refresh()->load('decisions');
         }, attempts: 3);

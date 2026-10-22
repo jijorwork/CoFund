@@ -5,10 +5,13 @@ namespace App\Domain\Approvals\Actions;
 use App\Domain\Approvals\Data\ApprovalDefinition;
 use App\Domain\Approvals\Exceptions\InvalidApprovalOperation;
 use App\Domain\Approvals\Models\ApprovalRequest;
+use App\Domain\Identity\Auditing\ActingContext;
+use App\Domain\Identity\Auditing\RecordApprovalAudit;
 use App\Domain\Identity\Services\RoleAuthorization;
 use App\Domain\Organisations\Tenancy\TenantContext;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class SubmitApprovalRequest
@@ -16,6 +19,7 @@ class SubmitApprovalRequest
     public function __construct(
         private TenantContext $context,
         private RoleAuthorization $authorization,
+        private RecordApprovalAudit $audit,
     ) {}
 
     public function handle(
@@ -53,20 +57,26 @@ class SubmitApprovalRequest
             throw new InvalidApprovalOperation('An approval request is already pending for this subject.');
         }
 
-        return ApprovalRequest::query()->create([
-            'organisation_id' => $organisationId,
-            'branch_id' => $branchId,
-            'workflow_key' => $definition->key,
-            'workflow_version' => $definition->version,
-            'subject_type' => $subjectType,
-            'subject_public_id' => $subjectPublicId,
-            'requested_by_user_id' => $requester->getKey(),
-            'step_permissions' => array_map(
-                static fn ($permission): string => $permission->value,
-                $definition->stepPermissions,
-            ),
-            'active_subject_key' => $activeSubjectKey,
-            'submitted_at' => now(),
-        ]);
+        return DB::transaction(function () use ($organisationId, $branchId, $definition, $subjectType, $subjectPublicId, $requester, $activeSubjectKey): ApprovalRequest {
+            $request = ApprovalRequest::query()->create([
+                'organisation_id' => $organisationId,
+                'branch_id' => $branchId,
+                'workflow_key' => $definition->key,
+                'workflow_version' => $definition->version,
+                'subject_type' => $subjectType,
+                'subject_public_id' => $subjectPublicId,
+                'requested_by_user_id' => $requester->getKey(),
+                'step_permissions' => array_map(
+                    static fn ($permission): string => $permission->value,
+                    $definition->stepPermissions,
+                ),
+                'active_subject_key' => $activeSubjectKey,
+                'submitted_at' => now(),
+            ]);
+
+            $this->audit->handle($request, ActingContext::from($requester, $this->context), 'approval.submitted');
+
+            return $request;
+        });
     }
 }
