@@ -25,6 +25,7 @@ use App\Filament\Resources\Members\Pages\ViewMember;
 use App\Filament\Resources\Members\RelationManagers\ContactsRelationManager;
 use App\Filament\Resources\Members\RelationManagers\ContributionEnrolmentsRelationManager;
 use App\Filament\Resources\Members\RelationManagers\DocumentsRelationManager;
+use App\Filament\Resources\Members\RelationManagers\LoansRelationManager;
 use App\Filament\Resources\TenantResource;
 use App\Filament\Support\FormatsMoney;
 use App\Filament\Support\MaskedPersonalData;
@@ -253,6 +254,7 @@ class MemberResource extends TenantResource
             ContactsRelationManager::class,
             DocumentsRelationManager::class,
             ContributionEnrolmentsRelationManager::class,
+            LoansRelationManager::class,
         ];
     }
 

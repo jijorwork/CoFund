@@ -46,6 +46,11 @@ role includes `filament.access`.
   context-bound, responsive slide-over. The form delegates to `CreateMember`,
   derives organisation, branch, member number, actor, and initial history from
   verified context, and treats national ID input as write-only in the panel.
+- Permission-gated member administration also covers profile edits, masked
+  contacts and beneficiaries, group membership, private document upload and
+  review, secure download, and account linking. Member detail shows read-only
+  wallet balances, contribution positions, and loan summaries under their
+  separate financial permissions.
 - Financial-transaction tables are tenant and branch scoped.
 - Notification template and delivery tables mask destinations and expose no
   provider payloads.
@@ -67,10 +72,9 @@ the relevant domain validation and action without duplicating API-controller
 logic. Notification retry, digest, reminder, and reporting screens remain
 dependent on unfinished Phase 13 services.
 
-The remaining membership surfaces are profile updates, contacts and
-beneficiaries, groups, documents and private downloads, account links, and
-expanded read-only financial summaries. Personal contact details remain masked
-unless the owner approves an explicit unmasked-data permission and audit policy.
+Personal contact details remain masked unless the owner approves an explicit
+unmasked-data permission and audit policy. Further member financial drill-down
+screens can follow the dedicated domain resources.
 
 Organisation creation remains an owner-approval boundary. Branch configuration
 mutations remain deferred until the owner decides whether configuration changes

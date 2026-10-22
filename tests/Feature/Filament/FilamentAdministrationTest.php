@@ -9,6 +9,9 @@ use App\Domain\Identity\Enums\FoundationPermission;
 use App\Domain\Identity\Enums\SystemRole;
 use App\Domain\Identity\Models\OrganisationUserRole;
 use App\Domain\Identity\Models\Role;
+use App\Domain\Loans\Models\Loan;
+use App\Domain\Loans\Models\LoanApplication;
+use App\Domain\Loans\Models\LoanOffer;
 use App\Domain\Membership\Actions\ActivateMember;
 use App\Domain\Membership\Actions\AddMemberContact;
 use App\Domain\Membership\Actions\CreateGroup;
@@ -57,6 +60,7 @@ use App\Filament\Resources\Members\Pages\ViewMember;
 use App\Filament\Resources\Members\RelationManagers\ContactsRelationManager;
 use App\Filament\Resources\Members\RelationManagers\ContributionEnrolmentsRelationManager;
 use App\Filament\Resources\Members\RelationManagers\DocumentsRelationManager;
+use App\Filament\Resources\Members\RelationManagers\LoansRelationManager;
 use App\Filament\Resources\OrganisationAccess\OrganisationUserResource;
 use App\Filament\Resources\OrganisationAccess\Pages\ListOrganisationUsers;
 use App\Filament\Resources\Organisations\OrganisationResource;
@@ -331,6 +335,77 @@ test('member contribution positions are read only and respect branch and role sc
 
     expect(ContributionEnrolmentsRelationManager::canViewForRecord($member, ViewMember::class))
         ->toBeFalse();
+});
+
+test('member loan summary is read only and respects branch and role scope', function () {
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    $branch = Branch::factory()->for($organisation)->create();
+    $otherBranch = Branch::factory()->for($organisation)->create();
+    $member = Member::factory()->for($organisation)->for($branch)->create();
+    $assignment = filamentAssignment($actor, $organisation, SystemRole::BranchManager, $branch);
+
+    $application = LoanApplication::factory()->create([
+        'organisation_id' => $organisation->id,
+        'branch_id' => $branch->id,
+        'member_id' => $member->id,
+    ]);
+    $offer = LoanOffer::factory()->create([
+        'organisation_id' => $organisation->id,
+        'loan_application_id' => $application->id,
+    ]);
+    $visible = Loan::factory()->create([
+        'organisation_id' => $organisation->id,
+        'branch_id' => $branch->id,
+        'member_id' => $member->id,
+        'loan_application_id' => $application->id,
+        'loan_offer_id' => $offer->id,
+        'loan_product_id' => $application->loan_product_id,
+        'outstanding_principal_minor' => 75000,
+        'outstanding_interest_minor' => 5000,
+        'arrears_minor' => 1200,
+    ]);
+    $hiddenApplication = LoanApplication::factory()->create([
+        'organisation_id' => $organisation->id,
+        'branch_id' => $otherBranch->id,
+        'member_id' => $member->id,
+    ]);
+    $hiddenOffer = LoanOffer::factory()->create([
+        'organisation_id' => $organisation->id,
+        'loan_application_id' => $hiddenApplication->id,
+    ]);
+    $hidden = Loan::factory()->create([
+        'organisation_id' => $organisation->id,
+        'branch_id' => $otherBranch->id,
+        'member_id' => $member->id,
+        'loan_application_id' => $hiddenApplication->id,
+        'loan_offer_id' => $hiddenOffer->id,
+        'loan_product_id' => $hiddenApplication->loan_product_id,
+    ]);
+
+    $this->actingAs($actor);
+
+    $context = app(TenantContext::class);
+    $context->setOrganisation($organisation);
+    $context->setBranch($branch);
+    $context->setRoleAssignment($assignment->load(['role', 'user']));
+
+    expect(MemberResource::getRelations())->toContain(LoansRelationManager::class);
+
+    Livewire::test(LoansRelationManager::class, [
+        'ownerRecord' => $member,
+        'pageClass' => ViewMember::class,
+    ])
+        ->assertOk()
+        ->assertCanSeeTableRecords([$visible])
+        ->assertCanNotSeeTableRecords([$hidden])
+        ->assertSee('GHS 800.00')
+        ->assertSee('GHS 12.00');
+
+    $assignment->role->revokePermissionTo(FoundationPermission::LoansView->value);
+    $context->setRoleAssignment($assignment->fresh('role'));
+
+    expect(LoansRelationManager::canViewForRecord($member, ViewMember::class))->toBeFalse();
 });
 
 test('member lifecycle UI delegates activation to the domain action', function () {
