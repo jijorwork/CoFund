@@ -21,7 +21,7 @@ foundation exists; it does not imply the module's later workflows are available.
 | Approvals | Reusable request and decision foundation | Tenant-scoped requests and immutable decisions | Versioned step-permission snapshot, request lifecycle, and decision actions | No API; domain integrations pending | No UI | Distinct actors, duplicate prevention, branch isolation, authorization, rejection, and immutability tests |
 | Complaints | Planned | No migrations | No models | No API | No UI | No tests |
 | Payments and Mobile Money | On hold | No provider-integration migrations | No provider-integration models | Manual records only; no provider callbacks | No provider UI | No provider-integration tests |
-| Auditing | Member lifecycle foundation | Append-only tenant-scoped audit events | Immutable AuditEvent | No API | No UI | Actor, role, subject, immutability, and transaction rollback tests |
+| Auditing | Member and approval lifecycle foundation | Append-only tenant-scoped audit events | Immutable AuditEvent | Permission-protected, tenant/branch-scoped audit event list and detail | No UI | Actor, role, subject, immutability, transaction rollback, API authorization and isolation tests |
 | Beneficiaries | Foundation complete within Membership | Unified member contacts | MemberContact | Nested contact API and entitlement validation | No UI | Allocation, nesting and masking tests |
 | Receipts and statements | Digital receipt foundation complete | Receipts and receipt-number sequences | Receipt | Staff list/detail/print data/reissue and public verification; statements deferred | No UI | Issuance, reversal, verification, privacy and API tests |
 | Reminders | Planned | No migrations | No models | No API | No UI | No tests |

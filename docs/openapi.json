@@ -16,6 +16,9 @@
             "name": "Accounting"
         },
         {
+            "name": "Audit Events"
+        },
+        {
             "name": "Contributions"
         },
         {
@@ -96,6 +99,107 @@
                 },
                 "x-cofund-route-name": "api.v1.accounting.trial-balance",
                 "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\TrialBalanceController",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/audit-events": {
+            "get": {
+                "tags": [
+                    "Audit Events"
+                ],
+                "summary": "Audit Events Index",
+                "operationId": "audit_events_index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.audit-events.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\AuditEventController@index",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/audit-events/{auditEventUuid}": {
+            "get": {
+                "tags": [
+                    "Audit Events"
+                ],
+                "summary": "Audit Events Show",
+                "operationId": "audit_events_show",
+                "parameters": [
+                    {
+                        "name": "auditEventUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.audit-events.show",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\AuditEventController@show",
                 "x-cofund-tenant-context": true,
                 "x-cofund-role-context": true,
                 "security": [

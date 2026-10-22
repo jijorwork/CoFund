@@ -5,6 +5,7 @@ use App\Domain\Loans\Actions\ManageLoanCollateral;
 use App\Domain\Loans\Actions\ManageLoanGuarantor;
 use App\Domain\Loans\Actions\ManageLoanProduct;
 use App\Domain\Organisations\Tenancy\TenantContext;
+use App\Http\Controllers\Api\V1\AuditEventController;
 use App\Http\Controllers\Api\V1\AuthContextController;
 use App\Http\Controllers\Api\V1\CashDepositController;
 use App\Http\Controllers\Api\V1\CashHandoverController;
@@ -106,6 +107,8 @@ Route::prefix('v1')->name('api.v1.')->middleware('throttle:api')->group(function
             })->name('context');
 
             Route::middleware('role.context')->group(function () {
+                Route::get('audit-events', [AuditEventController::class, 'index'])->name('audit-events.index');
+                Route::get('audit-events/{auditEventUuid}', [AuditEventController::class, 'show'])->name('audit-events.show');
                 Route::get('notifications/summary', [NotificationController::class, 'summary'])->name('notifications.summary');
                 Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
                 Route::get('notifications/{notificationUuid}', [NotificationController::class, 'show'])->name('notifications.show');
