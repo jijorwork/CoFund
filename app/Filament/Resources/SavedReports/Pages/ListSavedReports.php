@@ -8,4 +8,9 @@ use Filament\Resources\Pages\ListRecords;
 class ListSavedReports extends ListRecords
 {
     protected static string $resource = SavedReportResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [SavedReportResource::createReportAction()];
+    }
 }
