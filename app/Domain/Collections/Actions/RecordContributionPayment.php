@@ -24,6 +24,8 @@ use App\Domain\Contributions\Enums\EnrolmentStatus;
 use App\Domain\Identity\Enums\FoundationPermission;
 use App\Domain\Identity\Services\RoleAuthorization;
 use App\Domain\Membership\Enums\MemberStatus;
+use App\Domain\Notifications\Actions\CreateNotificationDispatch;
+use App\Domain\Notifications\ValueObjects\NotificationDispatchData;
 use App\Domain\Organisations\Tenancy\TenantContext;
 use App\Domain\Reconciliation\Enums\CollectorSessionStatus;
 use App\Domain\Reconciliation\Models\CollectorCollectionSession;
@@ -43,6 +45,7 @@ class RecordContributionPayment
         private PostFinancialTransaction $posting,
         private PaymentNumberGenerator $numbers,
         private IssueContributionReceipt $receipts,
+        private CreateNotificationDispatch $notifications,
     ) {}
 
     public function handle(User $actor, ContributionPaymentData $data): ContributionPayment
@@ -176,6 +179,24 @@ class RecordContributionPayment
 
             $receipt = $this->receipts->handle($payment->load('organisation'), $actor);
             $payment->update(['receipt_id' => $receipt->getKey()]);
+
+            $recipient = $data->member->user;
+            if ($recipient !== null) {
+                $this->notifications->handle(new NotificationDispatchData(
+                    organisation: $this->context->organisation(),
+                    branch: $data->sourceWallet->branch,
+                    eventKey: 'contribution.received',
+                    sourceType: 'contribution_payment',
+                    sourceUuid: $payment->public_id,
+                    recipient: $recipient,
+                    title: 'Contribution received',
+                    body: 'Your contribution of '.$payment->currency_code.' '.number_format($payment->amount_minor / 100, 2).' was received. Receipt '.$receipt->receipt_number.'.',
+                    context: [
+                        'payment_uuid' => $payment->public_id,
+                        'receipt_uuid' => $receipt->public_id,
+                    ],
+                ));
+            }
 
             return $this->load($payment);
         }, attempts: 3);

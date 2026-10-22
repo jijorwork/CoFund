@@ -20,6 +20,8 @@ use App\Domain\Identity\Enums\SystemRole;
 use App\Domain\Identity\Models\OrganisationUserRole;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Membership\Models\Member;
+use App\Domain\Notifications\Actions\CreateNotificationDispatch;
+use App\Domain\Notifications\Models\NotificationDispatch;
 use App\Domain\Organisations\Models\Organisation;
 use App\Domain\Organisations\Tenancy\TenantContext;
 use App\Domain\Wallets\Actions\CreateMemberWallet;
@@ -29,6 +31,7 @@ use App\Domain\Wallets\Services\CalculateWalletBalance;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Seeders\SystemAuthorizationSeeder;
+use Illuminate\Support\Facades\Queue;
 
 function collectionContext(User $actor, Organisation $organisation): void
 {
@@ -112,6 +115,66 @@ test('office cash contribution posts once allocates deterministically and issues
         ->and($fixture['obligation']->refresh()->satisfaction_status)->toBe(ObligationSatisfactionStatus::Satisfied)
         ->and(app(CalculateWalletBalance::class)->calculate($fixture['source'])->displayBalanceMinor)->toBe(15000)
         ->and(app(CalculateWalletBalance::class)->calculate($fixture['destination'])->displayBalanceMinor)->toBe(15000);
+});
+
+test('linked member receives one contribution confirmation despite an idempotent payment retry', function () {
+    Queue::fake();
+    $fixture = collectionFixture();
+    $recipient = User::factory()->create();
+    $fixture['member']->update(['user_id' => $recipient->getKey()]);
+    $data = new ContributionPaymentData(
+        member: $fixture['member'],
+        enrolment: $fixture['enrolment'],
+        plan: $fixture['plan'],
+        amountMinor: 10000,
+        currencyCode: 'GHS',
+        paymentMethod: ContributionPaymentMethod::Cash,
+        paymentDate: CarbonImmutable::today(),
+        sourceWallet: $fixture['source'],
+        destinationWallet: $fixture['destination'],
+        allocationStrategy: PaymentAllocationStrategy::OldestDueFirst,
+        idempotencyKey: 'payment-notification-one',
+    );
+
+    $payment = app(RecordContributionPayment::class)->handle($fixture['actor'], $data);
+    app(RecordContributionPayment::class)->handle($fixture['actor'], $data);
+
+    $dispatch = NotificationDispatch::query()->sole();
+    expect($dispatch->event_key)->toBe('contribution.received')
+        ->and($dispatch->source_uuid)->toBe($payment->public_id)
+        ->and($dispatch->user_id)->toBe($recipient->getKey())
+        ->and($dispatch->body)->toContain($payment->receipt->receipt_number)
+        ->and(NotificationDispatch::query()->count())->toBe(1);
+});
+
+test('a failed contribution notification rolls back the payment and receipt', function () {
+    Queue::fake();
+    $fixture = collectionFixture();
+    $recipient = User::factory()->create();
+    $fixture['member']->update(['user_id' => $recipient->getKey()]);
+    $notifications = Mockery::mock(CreateNotificationDispatch::class);
+    $notifications->shouldReceive('handle')->once()->andThrow(new RuntimeException('Dispatch unavailable'));
+    app()->instance(CreateNotificationDispatch::class, $notifications);
+    $data = new ContributionPaymentData(
+        member: $fixture['member'],
+        enrolment: $fixture['enrolment'],
+        plan: $fixture['plan'],
+        amountMinor: 10000,
+        currencyCode: 'GHS',
+        paymentMethod: ContributionPaymentMethod::Cash,
+        paymentDate: CarbonImmutable::today(),
+        sourceWallet: $fixture['source'],
+        destinationWallet: $fixture['destination'],
+        allocationStrategy: PaymentAllocationStrategy::OldestDueFirst,
+        idempotencyKey: 'payment-notification-failure',
+    );
+
+    expect(fn () => app(RecordContributionPayment::class)->handle($fixture['actor'], $data))
+        ->toThrow(RuntimeException::class);
+    expect(ContributionPayment::query()->count())->toBe(0)
+        ->and(Receipt::query()->count())->toBe(0)
+        ->and(NotificationDispatch::query()->count())->toBe(0)
+        ->and($fixture['obligation']->refresh()->outstanding_amount_minor)->toBe(10000);
 });
 
 test('payment reversal restores obligation and wallet balances while preserving receipts', function () {
