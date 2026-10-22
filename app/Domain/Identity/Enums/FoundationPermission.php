@@ -26,6 +26,11 @@ enum FoundationPermission: string
     case MembersVerifyContacts = 'members.verify_contacts';
     case MembersUploadDocuments = 'members.upload_documents';
     case MembersVerifyDocuments = 'members.verify_documents';
+    case ComplaintsView = 'complaints.view';
+    case ComplaintsCreate = 'complaints.create';
+    case ComplaintsRespond = 'complaints.respond';
+    case ComplaintsManage = 'complaints.manage';
+    case ComplaintsResolve = 'complaints.resolve';
     case GroupsView = 'groups.view';
     case GroupsCreate = 'groups.create';
     case GroupsUpdate = 'groups.update';

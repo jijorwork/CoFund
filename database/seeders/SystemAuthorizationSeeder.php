@@ -511,7 +511,30 @@ class SystemAuthorizationSeeder extends Seeder
             ...$this->reportingPermissionsFor($role),
             ...$this->notificationPermissionsFor($role),
             ...$this->filamentPermissionsFor($role),
+            ...$this->complaintPermissionsFor($role),
         ]));
+    }
+
+    /** @return list<string> */
+    private function complaintPermissionsFor(SystemRole $role): array
+    {
+        $view = [FoundationPermission::ComplaintsView->value];
+        $staff = [
+            ...$view,
+            FoundationPermission::ComplaintsCreate->value,
+            FoundationPermission::ComplaintsRespond->value,
+        ];
+
+        return match ($role) {
+            SystemRole::BranchManager => [
+                ...$staff,
+                FoundationPermission::ComplaintsManage->value,
+                FoundationPermission::ComplaintsResolve->value,
+            ],
+            SystemRole::MembershipOfficer, SystemRole::WelfareOfficer => $staff,
+            SystemRole::Auditor => $view,
+            default => [],
+        };
     }
 
     /** @return list<string> */

@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\CashHandoverController;
 use App\Http\Controllers\Api\V1\CashVarianceController;
 use App\Http\Controllers\Api\V1\CollectionReportController;
 use App\Http\Controllers\Api\V1\CollectorSessionController;
+use App\Http\Controllers\Api\V1\ComplaintCaseController;
 use App\Http\Controllers\Api\V1\ContributionEnrolmentController;
 use App\Http\Controllers\Api\V1\ContributionEnrolmentLifecycleController;
 use App\Http\Controllers\Api\V1\ContributionPaymentAllocationController;
@@ -107,6 +108,14 @@ Route::prefix('v1')->name('api.v1.')->middleware('throttle:api')->group(function
             })->name('context');
 
             Route::middleware('role.context')->group(function () {
+                Route::get('complaints', [ComplaintCaseController::class, 'index'])->name('complaints.index');
+                Route::post('complaints', [ComplaintCaseController::class, 'store'])->name('complaints.store');
+                Route::get('complaints/{complaintUuid}', [ComplaintCaseController::class, 'show'])->name('complaints.show');
+                Route::post('complaints/{complaintUuid}/messages', [ComplaintCaseController::class, 'respond'])->name('complaints.messages.store');
+                Route::post('complaints/{complaintUuid}/assign', [ComplaintCaseController::class, 'assign'])->name('complaints.assign');
+                Route::post('complaints/{complaintUuid}/resolve', [ComplaintCaseController::class, 'resolve'])->name('complaints.resolve');
+                Route::post('complaints/{complaintUuid}/close', [ComplaintCaseController::class, 'close'])->name('complaints.close');
+                Route::post('complaints/{complaintUuid}/reopen', [ComplaintCaseController::class, 'reopen'])->name('complaints.reopen');
                 Route::get('audit-events', [AuditEventController::class, 'index'])->name('audit-events.index');
                 Route::get('audit-events/{auditEventUuid}', [AuditEventController::class, 'show'])->name('audit-events.show');
                 Route::get('notifications/summary', [NotificationController::class, 'summary'])->name('notifications.summary');

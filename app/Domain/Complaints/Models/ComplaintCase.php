@@ -14,8 +14,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
-/** @property ComplaintStatus $status */
+/**
+ * @property ComplaintStatus $status
+ * @property Carbon|null $resolved_at
+ * @property Carbon|null $closed_at
+ */
 #[Fillable([
     'public_id', 'organisation_id', 'branch_id', 'member_id', 'reported_by_user_id',
     'assigned_to_user_id', 'subject', 'category', 'status', 'resolved_at',

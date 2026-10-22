@@ -2,6 +2,7 @@
 
 use App\Domain\Accounting\Exceptions\InvalidFinancialOperation;
 use App\Domain\Collections\Exceptions\InvalidContributionPayment;
+use App\Domain\Complaints\Exceptions\InvalidComplaintOperation;
 use App\Domain\Contributions\Exceptions\InvalidContributionOperation;
 use App\Domain\Expenses\Exceptions\InvalidExpenseOperation;
 use App\Domain\Identity\Exceptions\InvalidRoleAssignment;
@@ -140,6 +141,19 @@ return Application::configure(basePath: dirname(__DIR__))
                 request: $request,
                 code: 'membership_operation_invalid',
                 message: 'The membership operation could not be completed.',
+                status: 422,
+            );
+        });
+
+        $exceptions->render(function (InvalidComplaintOperation $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return ApiResponse::error(
+                request: $request,
+                code: 'complaint_operation_invalid',
+                message: 'The complaint operation could not be completed.',
                 status: 422,
             );
         });

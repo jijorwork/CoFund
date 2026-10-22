@@ -19,6 +19,9 @@
             "name": "Audit Events"
         },
         {
+            "name": "Complaints"
+        },
+        {
             "name": "Contributions"
         },
         {
@@ -1805,6 +1808,444 @@
                 },
                 "x-cofund-route-name": "api.v1.collector-sessions.submit",
                 "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\CollectorSessionController@submit",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/complaints": {
+            "get": {
+                "tags": [
+                    "Complaints"
+                ],
+                "summary": "Complaints Index",
+                "operationId": "complaints_index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.complaints.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ComplaintCaseController@index",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Complaints"
+                ],
+                "summary": "Complaints Store",
+                "operationId": "complaints_store",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.complaints.store",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ComplaintCaseController@store",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/complaints/{complaintUuid}": {
+            "get": {
+                "tags": [
+                    "Complaints"
+                ],
+                "summary": "Complaints Show",
+                "operationId": "complaints_show",
+                "parameters": [
+                    {
+                        "name": "complaintUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.complaints.show",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ComplaintCaseController@show",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/complaints/{complaintUuid}/assign": {
+            "post": {
+                "tags": [
+                    "Complaints"
+                ],
+                "summary": "Complaints Assign",
+                "operationId": "complaints_assign",
+                "parameters": [
+                    {
+                        "name": "complaintUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.complaints.assign",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ComplaintCaseController@assign",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/complaints/{complaintUuid}/close": {
+            "post": {
+                "tags": [
+                    "Complaints"
+                ],
+                "summary": "Complaints Close",
+                "operationId": "complaints_close",
+                "parameters": [
+                    {
+                        "name": "complaintUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.complaints.close",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ComplaintCaseController@close",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/complaints/{complaintUuid}/messages": {
+            "post": {
+                "tags": [
+                    "Complaints"
+                ],
+                "summary": "Complaints Messages Store",
+                "operationId": "complaints_messages_store",
+                "parameters": [
+                    {
+                        "name": "complaintUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.complaints.messages.store",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ComplaintCaseController@respond",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/complaints/{complaintUuid}/reopen": {
+            "post": {
+                "tags": [
+                    "Complaints"
+                ],
+                "summary": "Complaints Reopen",
+                "operationId": "complaints_reopen",
+                "parameters": [
+                    {
+                        "name": "complaintUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.complaints.reopen",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ComplaintCaseController@reopen",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/complaints/{complaintUuid}/resolve": {
+            "post": {
+                "tags": [
+                    "Complaints"
+                ],
+                "summary": "Complaints Resolve",
+                "operationId": "complaints_resolve",
+                "parameters": [
+                    {
+                        "name": "complaintUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.complaints.resolve",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ComplaintCaseController@resolve",
                 "x-cofund-tenant-context": true,
                 "x-cofund-role-context": true,
                 "security": [
