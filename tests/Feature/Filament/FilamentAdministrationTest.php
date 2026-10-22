@@ -40,6 +40,7 @@ use App\Domain\Organisations\Models\Branch;
 use App\Domain\Organisations\Models\Organisation;
 use App\Domain\Organisations\Models\OrganisationUser;
 use App\Domain\Organisations\Tenancy\TenantContext;
+use App\Domain\Wallets\Models\Wallet;
 use App\Filament\Resources\Accounting\FinancialTransactionResource;
 use App\Filament\Resources\Branches\BranchResource;
 use App\Filament\Resources\Branches\Pages\ListBranches;
@@ -247,6 +248,38 @@ test('member detail loads masked profile summaries and status history without se
         ->assertDontSee('+233501112222')
         ->assertDontSee('private.member@example.test')
         ->assertDontSee('GHA-123456789-0');
+});
+
+test('member detail shows only its ledger-derived wallets to staff with wallet permission', function () {
+    $user = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    $assignment = filamentAssignment($user, $organisation, SystemRole::BranchManager);
+    $member = Member::factory()->for($organisation)->create();
+    $otherMember = Member::factory()->for($organisation)->create();
+    Wallet::factory()->for($member, 'walletable')->create(['name' => 'Savings for this member']);
+    Wallet::factory()->for($otherMember, 'walletable')->create(['name' => 'Other member wallet']);
+
+    $this->actingAs($user);
+
+    $context = app(TenantContext::class);
+    $context->setOrganisation($organisation);
+    $context->setBranch(null);
+    $context->setRoleAssignment($assignment->load(['role', 'user']));
+
+    Livewire::test(ViewMember::class, ['record' => $member->public_id])
+        ->assertOk()
+        ->assertSee('Wallet balances')
+        ->assertSee('Savings for this member')
+        ->assertSee('GHS 0.00')
+        ->assertDontSee('Other member wallet');
+
+    $assignment->role->revokePermissionTo(FoundationPermission::WalletsView->value);
+    $context->setRoleAssignment($assignment->fresh('role'));
+
+    Livewire::test(ViewMember::class, ['record' => $member->public_id])
+        ->assertOk()
+        ->assertDontSee('Wallet balances')
+        ->assertDontSee('Savings for this member');
 });
 
 test('member lifecycle UI delegates activation to the domain action', function () {

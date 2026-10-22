@@ -17,6 +17,7 @@ use App\Domain\Membership\Exceptions\InvalidMembershipOperation;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Models\OrganisationUser;
 use App\Domain\Organisations\Tenancy\TenantContext;
+use App\Domain\Wallets\Services\CalculateMemberWalletBalances;
 use App\Filament\Resources\Members\Actions\EditMemberProfileAction;
 use App\Filament\Resources\Members\Actions\RegisterMemberAction;
 use App\Filament\Resources\Members\Pages\ListMembers;
@@ -24,6 +25,7 @@ use App\Filament\Resources\Members\Pages\ViewMember;
 use App\Filament\Resources\Members\RelationManagers\ContactsRelationManager;
 use App\Filament\Resources\Members\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\TenantResource;
+use App\Filament\Support\FormatsMoney;
 use App\Filament\Support\MaskedPersonalData;
 use App\Models\User;
 use BackedEnum;
@@ -137,6 +139,32 @@ class MemberResource extends TenantResource
                     TextEntry::make('loans_count')->label('Loans')->numeric(),
                 ])
                 ->columns(['sm' => 2, 'lg' => 3]),
+            Section::make('Wallet balances')
+                ->description('Balances are derived from posted ledger entries.')
+                ->visible(fn (): bool => self::canPerform(FoundationPermission::WalletsView))
+                ->schema([
+                    RepeatableEntry::make('wallet_balances')
+                        ->hiddenLabel()
+                        ->state(fn (Member $record): array => array_map(
+                            fn (array $row): array => [
+                                'name' => $row['wallet']->name,
+                                'balance' => FormatsMoney::format(
+                                    $row['balance']->displayBalanceMinor,
+                                    $row['wallet']->currency_code,
+                                ),
+                            ],
+                            app(CalculateMemberWalletBalances::class)->calculate($record),
+                        ))
+                        ->table([
+                            TableColumn::make('Wallet'),
+                            TableColumn::make('Balance'),
+                        ])
+                        ->schema([
+                            TextEntry::make('name'),
+                            TextEntry::make('balance'),
+                        ]),
+                ])
+                ->collapsible(),
             Section::make('Status history')
                 ->schema([
                     RepeatableEntry::make('statusHistories')
