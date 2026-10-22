@@ -3,6 +3,7 @@
 namespace App\Domain\Membership\Actions;
 
 use App\Domain\Identity\Auditing\ActingContext;
+use App\Domain\Identity\Auditing\RecordMemberStatusAudit;
 use App\Domain\Membership\Enums\MemberStatus;
 use App\Domain\Membership\Exceptions\InvalidMembershipOperation;
 use App\Domain\Membership\Models\Member;
@@ -18,6 +19,7 @@ class TransitionMemberStatus
     public function __construct(
         private TenantContext $tenantContext,
         private MembershipBranchScope $branchScope,
+        private RecordMemberStatusAudit $audit,
     ) {}
 
     public function handle(
@@ -88,6 +90,8 @@ class TransitionMemberStatus
                 'changed_by_user_id' => $acting->userId,
                 'acting_role_id' => $acting->roleId,
             ]);
+
+            $this->audit->handle($locked, $from, $to, $acting, $reason);
 
             return $locked->refresh()->load(['branch', 'user']);
         });
