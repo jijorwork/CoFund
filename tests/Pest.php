@@ -1,5 +1,13 @@
 <?php
 
+use App\Domain\Identity\Enums\SystemRole;
+use App\Domain\Identity\Models\OrganisationUserRole;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Organisations\Models\Branch;
+use App\Domain\Organisations\Models\Organisation;
+use App\Domain\Organisations\Models\OrganisationUser;
+use App\Domain\Organisations\Tenancy\TenantContext;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +52,59 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
-{
-    // ..
+function establishMembershipDomainContext(
+    User $actor,
+    Organisation $organisation,
+    ?Branch $branch = null,
+): void {
+    OrganisationUser::factory()->for($actor)->for($organisation)->create();
+    $assignment = OrganisationUserRole::factory()
+        ->for($actor)
+        ->for($organisation)
+        ->state([
+            'branch_id' => $branch?->getKey(),
+            'role_id' => Role::findByName(SystemRole::OrganisationAdmin->value)->getKey(),
+        ])->create();
+    $context = app(TenantContext::class);
+    $context->setOrganisation($organisation);
+    $context->setBranch($branch);
+    $context->setRoleAssignment($assignment);
+}
+
+function establishAccountingContext(
+    User $actor,
+    Organisation $organisation,
+    SystemRole $role = SystemRole::Treasurer,
+): void {
+    $assignment = OrganisationUserRole::factory()
+        ->for($actor)
+        ->for($organisation)
+        ->state(['role_id' => Role::findByName($role->value)->getKey()])
+        ->create();
+    $context = app(TenantContext::class);
+    $context->setOrganisation($organisation);
+    $context->setBranch(null);
+    $context->setRoleAssignment($assignment);
+}
+
+function selectMembershipApiContext(
+    TestCase $test,
+    User $user,
+    Organisation $organisation,
+    SystemRole $role,
+    ?Branch $branch = null,
+): void {
+    $assignment = OrganisationUserRole::factory()
+        ->for($user)
+        ->for($organisation)
+        ->state([
+            'branch_id' => $branch?->getKey(),
+            'role_id' => Role::findByName($role->value)->getKey(),
+        ])->create();
+
+    $test->actingAs($user)->postJson(route('api.v1.auth.context.store'), [
+        'organisation_uuid' => $organisation->public_id,
+        'branch_uuid' => $branch?->public_id,
+        'role_assignment_uuid' => $assignment->public_id,
+    ])->assertSuccessful();
 }

@@ -22,6 +22,8 @@ beforeEach(function () {
 });
 
 test('manual monthly subscription payment activates access and is idempotent', function () {
+    $this->travelTo(CarbonImmutable::parse('2026-08-15 12:00:00'));
+
     $actor = User::factory()->create();
     $actor->assignRole(SystemRole::PlatformAdmin->value);
     $organisation = Organisation::factory()->create();

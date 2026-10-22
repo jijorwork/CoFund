@@ -1,36 +1,11 @@
 <?php
 
 use App\Domain\Identity\Enums\SystemRole;
-use App\Domain\Identity\Models\OrganisationUserRole;
-use App\Domain\Identity\Models\Role;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Models\Branch;
 use App\Domain\Organisations\Models\Organisation;
 use App\Models\User;
 use Database\Seeders\SystemAuthorizationSeeder;
-use Tests\TestCase;
-
-function selectMembershipApiContext(
-    TestCase $test,
-    User $user,
-    Organisation $organisation,
-    SystemRole $role,
-    ?Branch $branch = null,
-): void {
-    $assignment = OrganisationUserRole::factory()
-        ->for($user)
-        ->for($organisation)
-        ->state([
-            'branch_id' => $branch?->getKey(),
-            'role_id' => Role::findByName($role->value)->getKey(),
-        ])->create();
-
-    $test->actingAs($user)->postJson(route('api.v1.auth.context.store'), [
-        'organisation_uuid' => $organisation->public_id,
-        'branch_uuid' => $branch?->public_id,
-        'role_assignment_uuid' => $assignment->public_id,
-    ])->assertSuccessful();
-}
 
 beforeEach(function () {
     $this->seed(SystemAuthorizationSeeder::class);

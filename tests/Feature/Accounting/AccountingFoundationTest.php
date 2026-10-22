@@ -9,12 +9,8 @@ use App\Domain\Accounting\Enums\AccountingPeriodStatus;
 use App\Domain\Accounting\Enums\AccountPurpose;
 use App\Domain\Accounting\Exceptions\InvalidFinancialOperation;
 use App\Domain\Accounting\Models\LedgerAccount;
-use App\Domain\Identity\Enums\SystemRole;
-use App\Domain\Identity\Models\OrganisationUserRole;
-use App\Domain\Identity\Models\Role;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Organisations\Models\Organisation;
-use App\Domain\Organisations\Tenancy\TenantContext;
 use App\Domain\Wallets\Actions\CloseWallet;
 use App\Domain\Wallets\Actions\CreateMemberWallet;
 use App\Domain\Wallets\Actions\ReinstateWallet;
@@ -25,22 +21,6 @@ use App\Domain\Wallets\Exceptions\InvalidWalletOperation;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Seeders\SystemAuthorizationSeeder;
-
-function establishAccountingContext(
-    User $actor,
-    Organisation $organisation,
-    SystemRole $role = SystemRole::Treasurer,
-): void {
-    $assignment = OrganisationUserRole::factory()
-        ->for($actor)
-        ->for($organisation)
-        ->state(['role_id' => Role::findByName($role->value)->getKey()])
-        ->create();
-    $context = app(TenantContext::class);
-    $context->setOrganisation($organisation);
-    $context->setBranch(null);
-    $context->setRoleAssignment($assignment);
-}
 
 beforeEach(function () {
     $this->seed(SystemAuthorizationSeeder::class);

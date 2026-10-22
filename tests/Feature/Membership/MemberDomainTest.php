@@ -1,8 +1,5 @@
 <?php
 
-use App\Domain\Identity\Enums\SystemRole;
-use App\Domain\Identity\Models\OrganisationUserRole;
-use App\Domain\Identity\Models\Role;
 use App\Domain\Membership\Actions\ActivateMember;
 use App\Domain\Membership\Actions\CreateMember;
 use App\Domain\Membership\Actions\ExitMember;
@@ -28,25 +25,6 @@ use App\Models\User;
 use Database\Seeders\SystemAuthorizationSeeder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-
-function establishMembershipDomainContext(
-    User $actor,
-    Organisation $organisation,
-    ?Branch $branch = null,
-): void {
-    OrganisationUser::factory()->for($actor)->for($organisation)->create();
-    $assignment = OrganisationUserRole::factory()
-        ->for($actor)
-        ->for($organisation)
-        ->state([
-            'branch_id' => $branch?->getKey(),
-            'role_id' => Role::findByName(SystemRole::OrganisationAdmin->value)->getKey(),
-        ])->create();
-    $context = app(TenantContext::class);
-    $context->setOrganisation($organisation);
-    $context->setBranch($branch);
-    $context->setRoleAssignment($assignment);
-}
 
 beforeEach(function () {
     $this->seed(SystemAuthorizationSeeder::class);
