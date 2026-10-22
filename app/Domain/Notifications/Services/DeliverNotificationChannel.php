@@ -8,9 +8,11 @@ use App\Domain\Notifications\Enums\NotificationChannel;
 use App\Domain\Notifications\Models\InAppNotification;
 use App\Domain\Notifications\Models\NotificationDelivery;
 use App\Domain\Notifications\Models\NotificationDeliveryAttempt;
+use App\Domain\Notifications\Models\NotificationDispatch;
 use App\Domain\Notifications\ValueObjects\MessagingMessage;
 use App\Domain\Notifications\ValueObjects\ProviderDeliveryResult;
 use App\Domain\Notifications\ValueObjects\SmsMessage;
+use App\Mail\NotificationEmail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use RuntimeException;
@@ -46,7 +48,7 @@ class DeliverNotificationChannel
 
         $this->completeAttempt($delivery, $result, (int) ((hrtime(true) - $startedAt) / 1_000_000));
 
-        if (! $result->successful && $result->retryable) {
+        if (! $result->successful && $delivery->refresh()->status === 'retry_pending') {
             throw new RuntimeException('Temporary notification delivery failure.');
         }
     }
@@ -62,6 +64,42 @@ class DeliverNotificationChannel
 
             if ($delivery->channel !== $expectedChannel || in_array($delivery->status, ['delivered', 'sent', 'suppressed', 'unavailable', 'permanently_failed'], true)) {
                 return null;
+            }
+
+            if ($delivery->status === 'sending') {
+                $previous = $delivery->attempts()
+                    ->where('attempt_number', $delivery->attempt_count)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($previous !== null && $previous->started_at->greaterThan(now()->subMinutes(5))) {
+                    throw new RuntimeException('Notification delivery is already in progress.');
+                }
+
+                if ($previous !== null) {
+                    $previous->update([
+                        'completed_at' => now(),
+                        'status' => 'timed_out',
+                        'failure_code' => 'delivery_timeout',
+                        'failure_reason' => 'The previous delivery attempt did not complete.',
+                    ]);
+                }
+
+                if ($delivery->attempt_count >= $this->maximumAttempts($delivery->channel)) {
+                    $delivery->update([
+                        'status' => 'permanently_failed',
+                        'failed_at' => now(),
+                        'failure_code' => 'delivery_timeout',
+                        'failure_reason' => 'The previous delivery attempt did not complete.',
+                    ]);
+                    $this->finishDispatchIfDone($delivery->dispatch()->lockForUpdate()->firstOrFail());
+
+                    return null;
+                }
+            }
+
+            if ($delivery->status === 'retry_pending' && $delivery->next_attempt_at?->isFuture()) {
+                throw new RuntimeException('Notification delivery is not ready for retry.');
             }
 
             $attemptNumber = $delivery->attempt_count + 1;
@@ -126,9 +164,10 @@ class DeliverNotificationChannel
             return new ProviderDeliveryResult(false, failureCode: 'invalid_destination', failureReason: 'No verified email address is available.');
         }
 
-        Mail::raw($dispatch->body, function ($message) use ($dispatch, $email): void {
-            $message->to($email)->subject($dispatch->title ?? (string) config('app.name'));
-        });
+        Mail::to($email)->send(new NotificationEmail(
+            $dispatch->title ?? (string) config('app.name'),
+            $dispatch->body,
+        ));
 
         return new ProviderDeliveryResult(true);
     }
@@ -145,41 +184,57 @@ class DeliverNotificationChannel
             $maximumAttempts = $this->maximumAttempts($locked->channel);
             $permanent = ! $result->successful && (! $result->retryable || $locked->attempt_count >= $maximumAttempts);
 
-            $attempt->forceFill([
+            $attempt->update([
                 'completed_at' => now(),
                 'status' => $result->successful ? 'succeeded' : 'failed',
                 'provider_response_code' => $result->responseCode,
                 'failure_code' => $result->failureCode,
                 'failure_reason' => $result->failureReason,
                 'duration_ms' => $durationMs,
-            ])->saveQuietly();
+            ]);
 
             $locked->update([
                 'status' => $result->successful ? 'delivered' : ($permanent ? 'permanently_failed' : 'retry_pending'),
                 'sent_at' => $result->successful ? now() : null,
                 'delivered_at' => $result->successful ? now() : null,
                 'failed_at' => $permanent ? now() : null,
-                'next_attempt_at' => ! $result->successful && ! $permanent ? now()->addMinutes(2 ** $locked->attempt_count) : null,
+                'next_attempt_at' => ! $result->successful && ! $permanent
+                    ? now()->addSeconds($this->retryDelaySeconds($locked->channel, $locked->attempt_count))
+                    : null,
                 'provider_message_reference' => $result->providerReference,
                 'failure_code' => $result->failureCode,
                 'failure_reason' => $result->failureReason,
             ]);
 
-            $dispatch = $locked->dispatch()->lockForUpdate()->firstOrFail();
-            $hasOutstanding = $dispatch->deliveries()->whereIn('status', ['pending', 'sending', 'retry_pending'])->exists();
-            if (! $hasOutstanding) {
-                $hasSuccess = $dispatch->deliveries()->where('status', 'delivered')->exists();
-                $dispatch->update([
-                    'status' => $hasSuccess ? 'completed' : 'failed',
-                    'completed_at' => $hasSuccess ? now() : null,
-                    'failed_at' => $hasSuccess ? null : now(),
-                ]);
-            }
+            $this->finishDispatchIfDone($locked->dispatch()->lockForUpdate()->firstOrFail());
         });
+    }
+
+    private function finishDispatchIfDone(NotificationDispatch $dispatch): void
+    {
+        if ($dispatch->deliveries()->whereIn('status', ['pending', 'sending', 'retry_pending'])->exists()) {
+            return;
+        }
+
+        $hasSuccess = $dispatch->deliveries()->where('status', 'delivered')->exists();
+        $dispatch->update([
+            'status' => $hasSuccess ? 'completed' : 'failed',
+            'completed_at' => $hasSuccess ? now() : null,
+            'failed_at' => $hasSuccess ? null : now(),
+        ]);
     }
 
     private function maximumAttempts(NotificationChannel $channel): int
     {
         return $channel === NotificationChannel::Email ? 5 : 3;
+    }
+
+    private function retryDelaySeconds(NotificationChannel $channel, int $attemptNumber): int
+    {
+        $delays = $channel === NotificationChannel::Email
+            ? [60, 300, 900, 3600]
+            : [60, 300];
+
+        return $delays[min($attemptNumber - 1, count($delays) - 1)];
     }
 }

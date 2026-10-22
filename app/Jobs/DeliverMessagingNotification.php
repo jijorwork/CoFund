@@ -13,6 +13,12 @@ class DeliverMessagingNotification implements ShouldQueue
 
     public int $tries = 3;
 
+    /** @return list<int> */
+    public function backoff(): array
+    {
+        return [60, 300];
+    }
+
     public function __construct(public string $deliveryUuid) {}
 
     public function handle(DeliverNotificationChannel $delivery): void

@@ -21,7 +21,22 @@ class NotificationDeliveryAttempt extends Model
 
     protected static function booted(): void
     {
-        static::updating(fn (): never => throw new \LogicException('Notification delivery attempts are append-only.'));
+        static::updating(function (self $attempt): void {
+            $allowed = [
+                'completed_at', 'status', 'provider_response_code',
+                'failure_code', 'failure_reason', 'duration_ms',
+            ];
+
+            if (
+                $attempt->getRawOriginal('status') !== 'started'
+                || $attempt->getRawOriginal('completed_at') !== null
+                || ! in_array($attempt->status, ['succeeded', 'failed', 'timed_out'], true)
+                || $attempt->completed_at === null
+                || array_diff(array_keys($attempt->getDirty()), $allowed) !== []
+            ) {
+                throw new \LogicException('Finalized notification delivery attempts are immutable.');
+            }
+        });
         static::deleting(fn (): never => throw new \LogicException('Notification delivery attempts cannot be deleted.'));
     }
 
