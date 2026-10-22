@@ -8,6 +8,7 @@ use App\Domain\Organisations\Tenancy\TenantContext;
 use App\Domain\Reports\Enums\ReportExportStatus;
 use App\Domain\Reports\Models\ReportExport;
 use App\Domain\Reports\Services\ExecuteRegisteredReport;
+use App\Domain\Reports\Services\NormalizeReportRows;
 use App\Domain\Reports\Services\ReportRegistry;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,6 +27,7 @@ class GenerateReportExport implements ShouldQueue
     public function handle(
         TenantContext $context,
         ExecuteRegisteredReport $executor,
+        NormalizeReportRows $normalizer,
         ReportRegistry $registry,
         RoleAuthorization $authorization,
     ): void {
@@ -63,7 +65,7 @@ class GenerateReportExport implements ShouldQueue
         $authorization->authorize($registry->get($export->report_key)->permission);
         $export->update(['status' => ReportExportStatus::Processing, 'started_at' => now()]);
         $result = $executor->execute($export->report_key, $export->filters);
-        $rows = $this->rows($result['data']);
+        $rows = $normalizer->rows($result['data']);
         $stream = fopen('php://temp', 'w+');
         if ($stream === false) {
             throw new \RuntimeException('Unable to create export stream.');
@@ -111,30 +113,5 @@ class GenerateReportExport implements ShouldQueue
             'failed_at' => now(),
             'failure_reason' => 'The report export could not be completed.',
         ]);
-    }
-
-    /** @return list<array<string, mixed>> */
-    private function rows(mixed $data): array
-    {
-        if (! is_array($data)) {
-            return [];
-        }
-        if (array_is_list($data)) {
-            return array_values(array_filter($data, 'is_array'));
-        }
-
-        $rows = [];
-        foreach ($data as $section => $sectionRows) {
-            if (! is_array($sectionRows)) {
-                continue;
-            }
-            foreach ($sectionRows as $row) {
-                if (is_array($row)) {
-                    $rows[] = ['section' => $section, ...$row];
-                }
-            }
-        }
-
-        return $rows;
     }
 }

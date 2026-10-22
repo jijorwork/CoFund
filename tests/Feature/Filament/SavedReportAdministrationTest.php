@@ -7,6 +7,7 @@ use App\Domain\Organisations\Models\Branch;
 use App\Domain\Organisations\Models\Organisation;
 use App\Domain\Organisations\Tenancy\TenantContext;
 use App\Domain\Reports\Models\ReportExport;
+use App\Domain\Reports\Models\ReportRun;
 use App\Domain\Reports\Models\SavedReport;
 use App\Domain\Reports\Services\ExecuteRegisteredReport;
 use App\Domain\Reports\ValueObjects\ReportDateRange;
@@ -243,4 +244,55 @@ test('export worker fails when no active role assignment can access the requeste
     app()->call([new GenerateReportExport($export->id), 'handle']);
     expect($export->refresh()->status->value)->toBe('failed')
         ->and($export->failure_reason)->toBe('No active reporting role can access the requested branch.');
+});
+
+test('authorised staff can preview a saved report and record its run', function () {
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    $branch = Branch::factory()->for($organisation)->create();
+    establishSavedReportContext($actor, $organisation, SystemRole::OrganisationAdmin, $branch);
+    $this->actingAs($actor);
+    $report = SavedReport::factory()->for($organisation)->for($actor, 'owner')->create([
+        'filters' => [],
+    ]);
+    $this->mock(ExecuteRegisteredReport::class)
+        ->shouldReceive('execute')
+        ->once()
+        ->andReturnUsing(function (string $key, array $filters) use ($branch, $organisation): array {
+            expect($key)->toBe('trial-balance')
+                ->and($filters['branch_uuid'])->toBe($branch->public_id);
+
+            return [
+                'data' => [['account' => '<script>unsafe</script>', 'balance_minor' => 100]],
+                'summary' => ['total_minor' => 100],
+                'range' => ReportDateRange::from($organisation),
+            ];
+        });
+
+    Livewire::test(ViewSavedReport::class, ['record' => $report->public_id])
+        ->assertActionVisible(TestAction::make('runReport'))
+        ->callAction(TestAction::make('runReport'))
+        ->assertHasNoActionErrors()
+        ->assertSet('previewRows.0.account', '<script>unsafe</script>')
+        ->assertSee('&lt;script&gt;unsafe&lt;/script&gt;', escape: false)
+        ->assertDontSee('<script>unsafe</script>', escape: false);
+
+    $run = ReportRun::query()->sole();
+    expect($run->status->value)->toBe('completed')
+        ->and($run->row_count)->toBe(1)
+        ->and($run->filters['branch_uuid'])->toBe($branch->public_id);
+});
+
+test('non-executable report definitions do not expose panel preview', function () {
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    establishSavedReportContext($actor, $organisation, SystemRole::OrganisationAdmin);
+    $this->actingAs($actor);
+    $report = SavedReport::factory()->for($organisation)->for($actor, 'owner')->create([
+        'report_key' => 'groups',
+    ]);
+
+    Livewire::test(ViewSavedReport::class, ['record' => $report->public_id])
+        ->assertActionHidden(TestAction::make('runReport'));
+    expect(ReportRun::query()->count())->toBe(0);
 });
