@@ -15927,6 +15927,61 @@
                 ]
             }
         },
+        "/wallets/{walletUuid}/statement": {
+            "get": {
+                "tags": [
+                    "Wallets"
+                ],
+                "summary": "Wallets Statement",
+                "operationId": "wallets_statement",
+                "parameters": [
+                    {
+                        "name": "walletUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.wallets.statement",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\WalletStatementController",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
         "/wallets/{walletUuid}/suspend": {
             "post": {
                 "tags": [

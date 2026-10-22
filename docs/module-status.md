@@ -23,7 +23,7 @@ foundation exists; it does not imply the module's later workflows are available.
 | Payments and Mobile Money | On hold | No provider-integration migrations | No provider-integration models | Manual records only; no provider callbacks | No provider UI | No provider-integration tests |
 | Auditing | Member and approval lifecycle foundation | Append-only tenant-scoped audit events | Immutable AuditEvent | Permission-protected, tenant/branch-scoped audit event list and detail | No UI | Actor, role, subject, immutability, transaction rollback, API authorization and isolation tests |
 | Beneficiaries | Foundation complete within Membership | Unified member contacts | MemberContact | Nested contact API and entitlement validation | No UI | Allocation, nesting and masking tests |
-| Receipts and statements | Digital receipt foundation complete | Receipts and receipt-number sequences | Receipt | Staff list/detail/print data/reissue and public verification; statements deferred | No UI | Issuance, reversal, verification, privacy and API tests |
+| Receipts and statements | Digital receipts and wallet statement API implemented | Receipts and receipt-number sequences | Receipt; wallet statements are derived from ledger entries | Staff receipt list/detail/print data/reissue, public verification, and paginated wallet statements; broader member statements deferred | No UI | Issuance, reversal, verification, privacy, API, statement balance, pagination, and isolation tests |
 | Reminders | Planned | No migrations | No models | No API | No UI | No tests |
 | Backups | Planned | No migrations | No models | No API | No UI | No tests |
 | External APIs | Planned | No migrations | No models | No API | No UI | No tests |

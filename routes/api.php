@@ -62,6 +62,7 @@ use App\Http\Controllers\Api\V1\TrialBalanceController;
 use App\Http\Controllers\Api\V1\WalletBalanceController;
 use App\Http\Controllers\Api\V1\WalletController;
 use App\Http\Controllers\Api\V1\WalletLifecycleController;
+use App\Http\Controllers\Api\V1\WalletStatementController;
 use App\Http\Controllers\Api\V1\WelfareClaimController;
 use App\Http\Controllers\Api\V1\WelfareDocumentController;
 use App\Http\Controllers\Api\V1\WelfareEnrolmentController;
@@ -236,6 +237,7 @@ Route::prefix('v1')->name('api.v1.')->middleware('throttle:api')->group(function
                 Route::post('wallets', [WalletController::class, 'store'])->name('wallets.store');
                 Route::get('wallets/{walletUuid}', [WalletController::class, 'show'])->name('wallets.show');
                 Route::get('wallets/{walletUuid}/balance', WalletBalanceController::class)->name('wallets.balance');
+                Route::get('wallets/{walletUuid}/statement', WalletStatementController::class)->name('wallets.statement');
                 Route::post('wallets/{walletUuid}/suspend', [WalletLifecycleController::class, 'suspend'])->name('wallets.suspend');
                 Route::post('wallets/{walletUuid}/reinstate', [WalletLifecycleController::class, 'reinstate'])->name('wallets.reinstate');
                 Route::post('wallets/{walletUuid}/close', [WalletLifecycleController::class, 'close'])->name('wallets.close');
