@@ -6,12 +6,19 @@ use App\Domain\Identity\Models\Role;
 use App\Domain\Organisations\Models\Branch;
 use App\Domain\Organisations\Models\Organisation;
 use App\Domain\Organisations\Tenancy\TenantContext;
+use App\Domain\Reports\Models\ReportExport;
 use App\Domain\Reports\Models\SavedReport;
+use App\Domain\Reports\Services\ExecuteRegisteredReport;
+use App\Domain\Reports\ValueObjects\ReportDateRange;
 use App\Filament\Resources\SavedReports\Pages\ListSavedReports;
+use App\Filament\Resources\SavedReports\Pages\ViewSavedReport;
 use App\Filament\Resources\SavedReports\SavedReportResource;
+use App\Jobs\GenerateReportExport;
 use App\Models\User;
 use Database\Seeders\SystemAuthorizationSeeder;
 use Filament\Actions\Testing\TestAction;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -157,4 +164,83 @@ test('saved report authoring rejects future dates and unauthorised sharing', fun
         ])
         ->assertHasActionErrors();
     expect(SavedReport::query()->count())->toBe(0);
+});
+
+test('organisation administrator requests a branch-scoped export from a saved report', function () {
+    Queue::fake();
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    $branch = Branch::factory()->for($organisation)->create();
+    establishSavedReportContext($actor, $organisation, SystemRole::OrganisationAdmin, $branch);
+    $this->actingAs($actor);
+    $report = SavedReport::factory()->for($organisation)->for($actor, 'owner')->create([
+        'filters' => [],
+    ]);
+
+    Livewire::test(ViewSavedReport::class, ['record' => $report->public_id])
+        ->assertActionVisible(TestAction::make('requestExport'))
+        ->callAction(TestAction::make('requestExport'))
+        ->assertHasNoActionErrors();
+
+    $export = ReportExport::query()->sole();
+    expect($export->requested_by_user_id)->toBe($actor->id)
+        ->and($export->organisation_id)->toBe($organisation->id)
+        ->and($export->filters['branch_uuid'])->toBe($branch->public_id)
+        ->and($export->status->value)->toBe('pending');
+    Queue::assertPushed(GenerateReportExport::class, 1);
+});
+
+test('export worker uses the matching active branch assignment', function () {
+    Storage::fake('local');
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    $firstBranch = Branch::factory()->for($organisation)->create();
+    $targetBranch = Branch::factory()->for($organisation)->create();
+    $first = establishSavedReportContext($actor, $organisation, SystemRole::OrganisationAdmin, $firstBranch);
+    $second = establishSavedReportContext($actor, $organisation, SystemRole::OrganisationAdmin, $targetBranch);
+    $this->actingAs($actor);
+    $export = ReportExport::factory()->for($organisation)->for($actor, 'requestedBy')->create([
+        'acting_role_id' => $second->role_id,
+        'filters' => ['branch_uuid' => $targetBranch->public_id],
+    ]);
+    $this->mock(ExecuteRegisteredReport::class)
+        ->shouldReceive('execute')
+        ->once()
+        ->andReturnUsing(function (string $key, array $filters): array {
+            expect(app(TenantContext::class)->branch()?->public_id)->toBe($filters['branch_uuid']);
+
+            return ['data' => [], 'summary' => [], 'range' => ReportDateRange::from(app(TenantContext::class)->organisation())];
+        });
+
+    app()->call([new GenerateReportExport($export->id), 'handle']);
+    expect($export->refresh()->status->value)->toBe('completed');
+});
+
+test('report export action is unavailable without panel export permission', function () {
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    establishSavedReportContext($actor, $organisation, SystemRole::Treasurer);
+    $this->actingAs($actor);
+    $report = SavedReport::factory()->for($organisation)->for($actor, 'owner')->create();
+
+    Livewire::test(ViewSavedReport::class, ['record' => $report->public_id])
+        ->assertActionHidden(TestAction::make('requestExport'));
+    expect(ReportExport::query()->count())->toBe(0);
+});
+
+test('export worker fails when no active role assignment can access the requested branch', function () {
+    Storage::fake('local');
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    $allowedBranch = Branch::factory()->for($organisation)->create();
+    $forbiddenBranch = Branch::factory()->for($organisation)->create();
+    $assignment = establishSavedReportContext($actor, $organisation, SystemRole::OrganisationAdmin, $allowedBranch);
+    $export = ReportExport::factory()->for($organisation)->for($actor, 'requestedBy')->create([
+        'acting_role_id' => $assignment->role_id,
+        'filters' => ['branch_uuid' => $forbiddenBranch->public_id],
+    ]);
+
+    app()->call([new GenerateReportExport($export->id), 'handle']);
+    expect($export->refresh()->status->value)->toBe('failed')
+        ->and($export->failure_reason)->toBe('No active reporting role can access the requested branch.');
 });

@@ -50,9 +50,7 @@ class ReportExportResource extends TenantResource
             ->where('organisation_id', $context->organisation()->getKey())
             ->where('requested_by_user_id', auth()->id())
             ->whereIn('report_key', self::permittedReportKeys())
-            ->when($branch, fn (Builder $query) => $query->where(fn (Builder $query) => $query
-                ->whereNull('filters->branch_uuid')
-                ->orWhere('filters->branch_uuid', $branch->public_id)));
+            ->when($branch, fn (Builder $query) => $query->where('filters->branch_uuid', $branch->public_id));
     }
 
     public static function canView(Model $record): bool
@@ -67,7 +65,7 @@ class ReportExportResource extends TenantResource
         return $record->organisation_id === $context->organisation()->getKey()
             && $record->requested_by_user_id === auth()->id()
             && in_array($record->report_key, self::permittedReportKeys(), true)
-            && ($branch === null || ! isset($record->filters['branch_uuid']) || $record->filters['branch_uuid'] === $branch->public_id);
+            && ($branch === null || ($record->filters['branch_uuid'] ?? null) === $branch->public_id);
     }
 
     public static function canDownload(ReportExport $record): bool

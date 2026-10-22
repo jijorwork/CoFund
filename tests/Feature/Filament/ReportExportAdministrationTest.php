@@ -45,18 +45,21 @@ test('report export history stays scoped to owner, tenant, branch, and report pe
 
     $own = ReportExport::factory()->for($organisation)->for($actor, 'requestedBy')->create([
         'report_key' => 'trial-balance',
+        'filters' => ['branch_uuid' => $branch->public_id],
     ]);
     $otherOwner = ReportExport::factory()->for($organisation)->for($otherUser, 'requestedBy')->create();
     $otherTenant = ReportExport::factory()->for($otherOrganisation)->for($actor, 'requestedBy')->create();
     $otherBranchExport = ReportExport::factory()->for($organisation)->for($actor, 'requestedBy')->create([
         'filters' => ['branch_uuid' => $otherBranch->public_id],
     ]);
+    $unscopedExport = ReportExport::factory()->for($organisation)->for($actor, 'requestedBy')->create();
 
     expect(ReportExportResource::getEloquentQuery()->pluck('public_id')->all())->toBe([$own->public_id]);
     expect(ReportExportResource::canView($own))->toBeTrue()
         ->and(ReportExportResource::canView($otherOwner))->toBeFalse()
         ->and(ReportExportResource::canView($otherTenant))->toBeFalse()
-        ->and(ReportExportResource::canView($otherBranchExport))->toBeFalse();
+        ->and(ReportExportResource::canView($otherBranchExport))->toBeFalse()
+        ->and(ReportExportResource::canView($unscopedExport))->toBeFalse();
     $this->get(ReportExportResource::getUrl('view', ['record' => $own->public_id]))->assertSuccessful();
     $this->get(ReportExportResource::getUrl('view', ['record' => $otherOwner->public_id]))->assertNotFound();
     $this->get(ReportExportResource::getUrl('view', ['record' => $otherBranchExport->public_id]))->assertNotFound();

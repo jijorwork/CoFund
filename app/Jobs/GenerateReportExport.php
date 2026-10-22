@@ -10,6 +10,7 @@ use App\Domain\Reports\Models\ReportExport;
 use App\Domain\Reports\Services\ExecuteRegisteredReport;
 use App\Domain\Reports\Services\ReportRegistry;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -33,10 +34,16 @@ class GenerateReportExport implements ShouldQueue
             return;
         }
 
+        $branchUuid = $export->filters['branch_uuid'] ?? null;
         $assignment = OrganisationUserRole::query()
             ->where('organisation_id', $export->organisation_id)
             ->where('user_id', $export->requested_by_user_id)
             ->where('role_id', $export->acting_role_id)
+            ->when(is_string($branchUuid) && $branchUuid !== '', fn (Builder $query) => $query
+                ->where(fn (Builder $query) => $query
+                    ->whereNull('branch_id')
+                    ->orWhereHas('branch', fn (Builder $query) => $query->where('public_id', $branchUuid))))
+            ->orderByRaw('CASE WHEN branch_id IS NULL THEN 0 ELSE 1 END')
             ->with(['branch', 'role'])
             ->get()
             ->first(fn (OrganisationUserRole $assignment): bool => $assignment->isCurrentlyValid());
@@ -44,7 +51,7 @@ class GenerateReportExport implements ShouldQueue
             $export->update([
                 'status' => ReportExportStatus::Failed,
                 'failed_at' => now(),
-                'failure_reason' => 'The reporting role is no longer active.',
+                'failure_reason' => 'No active reporting role can access the requested branch.',
             ]);
 
             return;
