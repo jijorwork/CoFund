@@ -5,6 +5,7 @@ namespace App\Domain\Collections\Actions;
 use App\Domain\Collections\Exceptions\InvalidReceiptOperation;
 use App\Domain\Collections\Models\Receipt;
 use App\Domain\Collections\Services\BuildContributionReceiptView;
+use App\Domain\Identity\Auditing\Models\AuditEvent;
 use App\Domain\Identity\Enums\FoundationPermission;
 use App\Domain\Identity\Enums\SystemRole;
 use App\Domain\Identity\Services\RoleAuthorization;
@@ -54,6 +55,21 @@ class PrepareReceiptReissue
 
         $reissuedAt = CarbonImmutable::now();
         $view = $this->builder->build($receipt);
+
+        AuditEvent::query()->create([
+            'organisation_id' => $receipt->organisation_id,
+            'branch_id' => $receipt->branch_id,
+            'actor_user_id' => $collectorUserId,
+            'acting_role_id' => $this->context->role()->getKey(),
+            'role_assignment_id' => $this->context->roleAssignment()->getKey(),
+            'event_key' => 'receipt.reissued',
+            'subject_type' => 'receipt',
+            'subject_public_id' => $receipt->public_id,
+            'details' => [
+                'receipt_number' => $receipt->receipt_number,
+                'reissued_at' => $reissuedAt->toIso8601String(),
+            ],
+        ]);
 
         Log::info('Receipt reissued', [
             'receipt_uuid' => $receipt->public_id,

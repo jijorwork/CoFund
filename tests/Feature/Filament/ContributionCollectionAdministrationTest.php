@@ -16,6 +16,7 @@ use App\Domain\Collections\Services\AllocateContributionPayment;
 use App\Domain\Contributions\Models\ContributionObligation;
 use App\Domain\Contributions\Models\ContributionPlan;
 use App\Domain\Contributions\Models\MemberPlanEnrolment;
+use App\Domain\Identity\Auditing\Models\AuditEvent;
 use App\Domain\Identity\Enums\FoundationPermission;
 use App\Domain\Identity\Enums\SystemRole;
 use App\Domain\Identity\Models\OrganisationUserRole;
@@ -644,6 +645,11 @@ test('authorized receipt reissue downloads an escaped printable receipt with ver
         SystemRole::Treasurer,
     );
     $prepared = app(PrepareReceiptReissue::class)->handle($receipt);
+    $audit = AuditEvent::query()->where('event_key', 'receipt.reissued')->sole();
+    expect($audit->organisation_id)->toBe($organisation->id)
+        ->and($audit->actor_user_id)->toBe($actor->id)
+        ->and($audit->subject_public_id)->toBe($receipt->public_id)
+        ->and($audit->details['receipt_number'])->toBe($receipt->receipt_number);
     $expectedHtml = view('receipts.print', [
         'receiptView' => $prepared['view'],
         'reissuedAt' => $prepared['reissued_at'],
@@ -691,4 +697,5 @@ test('receipt reissue domain action rejects records outside the active context',
 
     expect(fn () => app(PrepareReceiptReissue::class)->handle($foreignReceipt))
         ->toThrow(InvalidReceiptOperation::class);
+    expect(AuditEvent::query()->where('event_key', 'receipt.reissued')->count())->toBe(0);
 });
