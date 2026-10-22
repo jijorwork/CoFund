@@ -23,6 +23,7 @@ use App\Filament\Resources\Members\Actions\RegisterMemberAction;
 use App\Filament\Resources\Members\Pages\ListMembers;
 use App\Filament\Resources\Members\Pages\ViewMember;
 use App\Filament\Resources\Members\RelationManagers\ContactsRelationManager;
+use App\Filament\Resources\Members\RelationManagers\ContributionEnrolmentsRelationManager;
 use App\Filament\Resources\Members\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\TenantResource;
 use App\Filament\Support\FormatsMoney;
@@ -251,6 +252,7 @@ class MemberResource extends TenantResource
         return [
             ContactsRelationManager::class,
             DocumentsRelationManager::class,
+            ContributionEnrolmentsRelationManager::class,
         ];
     }
 

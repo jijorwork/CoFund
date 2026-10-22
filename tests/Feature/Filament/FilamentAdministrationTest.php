@@ -1,6 +1,9 @@
 <?php
 
 use App\Domain\Accounting\Models\FinancialTransaction;
+use App\Domain\Contributions\Models\ContributionObligation;
+use App\Domain\Contributions\Models\ContributionPlan;
+use App\Domain\Contributions\Models\MemberPlanEnrolment;
 use App\Domain\Identity\Actions\AssignRoleToUser;
 use App\Domain\Identity\Enums\FoundationPermission;
 use App\Domain\Identity\Enums\SystemRole;
@@ -52,6 +55,7 @@ use App\Filament\Resources\Members\MemberResource;
 use App\Filament\Resources\Members\Pages\ListMembers;
 use App\Filament\Resources\Members\Pages\ViewMember;
 use App\Filament\Resources\Members\RelationManagers\ContactsRelationManager;
+use App\Filament\Resources\Members\RelationManagers\ContributionEnrolmentsRelationManager;
 use App\Filament\Resources\Members\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\OrganisationAccess\OrganisationUserResource;
 use App\Filament\Resources\OrganisationAccess\Pages\ListOrganisationUsers;
@@ -280,6 +284,53 @@ test('member detail shows only its ledger-derived wallets to staff with wallet p
         ->assertOk()
         ->assertDontSee('Wallet balances')
         ->assertDontSee('Savings for this member');
+});
+
+test('member contribution positions are read only and respect branch and role scope', function () {
+    $actor = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+    $branch = Branch::factory()->for($organisation)->create();
+    $otherBranch = Branch::factory()->for($organisation)->create();
+    $member = Member::factory()->for($organisation)->for($branch)->create();
+    $assignment = filamentAssignment($actor, $organisation, SystemRole::BranchManager, $branch);
+    $visiblePlan = ContributionPlan::factory()->for($organisation)->create(['name' => 'Visible savings plan']);
+    $hiddenPlan = ContributionPlan::factory()->for($organisation)->create(['name' => 'Other branch plan']);
+    $visible = MemberPlanEnrolment::factory()->for($visiblePlan, 'contributionPlan')
+        ->for($member)->create();
+    $hidden = MemberPlanEnrolment::factory()->completed()
+        ->for($hiddenPlan, 'contributionPlan')->for($member)
+        ->create(['branch_id' => $otherBranch->id]);
+    ContributionObligation::factory()->for($visible, 'enrolment')->create([
+        'expected_amount_minor' => 10000,
+        'satisfied_amount_minor' => 2500,
+        'outstanding_amount_minor' => 7500,
+    ]);
+
+    $this->actingAs($actor);
+
+    $context = app(TenantContext::class);
+    $context->setOrganisation($organisation);
+    $context->setBranch($branch);
+    $context->setRoleAssignment($assignment->load(['role', 'user']));
+
+    expect(MemberResource::getRelations())->toContain(ContributionEnrolmentsRelationManager::class);
+
+    Livewire::test(ContributionEnrolmentsRelationManager::class, [
+        'ownerRecord' => $member,
+        'pageClass' => ViewMember::class,
+    ])
+        ->assertOk()
+        ->assertCanSeeTableRecords([$visible])
+        ->assertCanNotSeeTableRecords([$hidden])
+        ->assertSee('Visible savings plan')
+        ->assertSee('Outstanding GHS 75.00')
+        ->assertDontSee('Other branch plan');
+
+    $assignment->role->revokePermissionTo(FoundationPermission::ContributionEnrolmentsView->value);
+    $context->setRoleAssignment($assignment->fresh('role'));
+
+    expect(ContributionEnrolmentsRelationManager::canViewForRecord($member, ViewMember::class))
+        ->toBeFalse();
 });
 
 test('member lifecycle UI delegates activation to the domain action', function () {
