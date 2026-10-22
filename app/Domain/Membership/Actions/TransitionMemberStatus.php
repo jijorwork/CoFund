@@ -9,6 +9,8 @@ use App\Domain\Membership\Exceptions\InvalidMembershipOperation;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Membership\Models\MemberStatusHistory;
 use App\Domain\Membership\Services\MembershipBranchScope;
+use App\Domain\Notifications\Actions\CreateNotificationDispatch;
+use App\Domain\Notifications\ValueObjects\NotificationDispatchData;
 use App\Domain\Organisations\Tenancy\TenantContext;
 use App\Models\User;
 use Carbon\CarbonInterface;
@@ -20,6 +22,7 @@ class TransitionMemberStatus
         private TenantContext $tenantContext,
         private MembershipBranchScope $branchScope,
         private RecordMemberStatusAudit $audit,
+        private CreateNotificationDispatch $notifications,
     ) {}
 
     public function handle(
@@ -80,7 +83,7 @@ class TransitionMemberStatus
 
             $locked->update($changes);
 
-            MemberStatusHistory::query()->create([
+            $history = MemberStatusHistory::query()->create([
                 'organisation_id' => $acting->organisationId,
                 'member_id' => $locked->getKey(),
                 'from_status' => $from,
@@ -92,8 +95,37 @@ class TransitionMemberStatus
             ]);
 
             $this->audit->handle($locked, $from, $to, $acting, $reason);
+            $this->notifyLinkedMember($locked, $history, $to);
 
             return $locked->refresh()->load(['branch', 'user']);
         });
+    }
+
+    private function notifyLinkedMember(Member $member, MemberStatusHistory $history, MemberStatus $status): void
+    {
+        if (! in_array($status, [MemberStatus::Active, MemberStatus::Suspended], true) || $member->user_id === null) {
+            return;
+        }
+
+        $recipient = $member->user;
+        if ($recipient === null) {
+            return;
+        }
+
+        $activated = $status === MemberStatus::Active;
+        $organisation = $this->tenantContext->organisation();
+        $this->notifications->handle(new NotificationDispatchData(
+            organisation: $organisation,
+            branch: $member->branch,
+            eventKey: $activated ? 'member.activated' : 'member.suspended',
+            sourceType: 'member_status_history',
+            sourceUuid: $history->public_id,
+            recipient: $recipient,
+            title: $activated ? 'Membership activated' : 'Membership suspended',
+            body: $activated
+                ? 'Your membership with '.$organisation->name.' is active.'
+                : 'Your membership with '.$organisation->name.' has been suspended. Contact your organisation for details.',
+            context: ['member_uuid' => $member->public_id, 'status' => $status->value],
+        ));
     }
 }
