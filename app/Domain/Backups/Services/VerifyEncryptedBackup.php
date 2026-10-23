@@ -70,6 +70,11 @@ class VerifyEncryptedBackup
                         || ! is_array($expected) || ! is_string($expected['sha256'] ?? null) || ! is_int($expected['bytes'] ?? null)) {
                         throw new RuntimeException('Backup manifest contains an invalid entry.');
                     }
+                    foreach (explode('/', $name) as $segment) {
+                        if ($segment === '.' || $segment === '..') {
+                            throw new RuntimeException('Backup manifest contains an unsafe path.');
+                        }
+                    }
                     if (($archive->statName($name)['encryption_method'] ?? null) !== ZipArchive::EM_AES_256) {
                         throw new RuntimeException('Backup entry is not encrypted.');
                     }

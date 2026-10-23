@@ -134,6 +134,40 @@ test('failed MySQL dump leaves no stored backup', function () {
     expect(Storage::disk('local')->files('backups'))->toBeEmpty();
 });
 
+test('recovery rejects encrypted archive entries with traversal segments', function () {
+    $archivePath = Storage::disk('local')->path('backups/unsafe.zip');
+    if (! is_dir(dirname($archivePath))) {
+        mkdir(dirname($archivePath), 0700, true);
+    }
+    $archive = new ZipArchive;
+    expect($archive->open($archivePath, ZipArchive::CREATE))->toBeTrue();
+    $archive->setPassword((string) config('cofund.backups.password'));
+    $entries = [
+        'database.sqlite' => file_get_contents($this->backupSource),
+        'storage/../escaped.txt' => 'escaped-data',
+    ];
+    $files = [];
+    foreach ($entries as $name => $contents) {
+        $archive->addFromString($name, $contents);
+        $archive->setEncryptionName($name, ZipArchive::EM_AES_256);
+        $files[$name] = ['sha256' => hash('sha256', $contents), 'bytes' => strlen($contents)];
+    }
+    $archive->addFromString('manifest.json', json_encode([
+        'format' => 'cofund-backup-v1',
+        'created_at' => now()->utc()->toIso8601String(),
+        'database_driver' => 'sqlite',
+        'files' => $files,
+    ], JSON_THROW_ON_ERROR));
+    $archive->setEncryptionName('manifest.json', ZipArchive::EM_AES_256);
+    $archive->close();
+
+    expect(fn () => app(VerifyEncryptedBackup::class)->handle('backups/unsafe.zip'))
+        ->toThrow(RuntimeException::class, 'Backup manifest contains an unsafe path.');
+    expect(fn () => app(StageEncryptedBackup::class)->handle('backups/unsafe.zip', $this->backupTarget))
+        ->toThrow(RuntimeException::class);
+    expect(is_dir($this->backupTarget))->toBeFalse();
+});
+
 test('backup creation refuses a missing password and unsupported database driver', function () {
     config()->set('cofund.backups.password', null);
     expect(fn () => app(CreateEncryptedBackup::class)->handle())->toThrow(RuntimeException::class);
