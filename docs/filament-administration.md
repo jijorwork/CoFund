@@ -55,6 +55,9 @@ role includes `filament.access`.
 - Notification template and delivery tables mask destinations and expose no
   provider payloads.
 - Financial transactions and notification history are read-only.
+- Complaint cases have scoped intake, status and assignee filtering, case detail
+  and correspondence, and permission-gated assignment, resolution, closure,
+  and reopening. Every mutation calls the complaint domain action.
 - Scoped tenant and role context remains available throughout Livewire's
   persistent middleware lifecycle and is reset at the request boundary.
 
