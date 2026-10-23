@@ -55,6 +55,9 @@ role includes `filament.access`.
 - Notification template and delivery tables mask destinations and expose no
   provider payloads.
 - Financial transactions and notification history are read-only.
+- Auditors can browse immutable audit events through an organisation- and
+  branch-scoped read-only list and detail page, using the dedicated panel and
+  audit-report permissions.
 - Complaint cases have scoped intake, status and assignee filtering, case detail
   and correspondence, and permission-gated assignment, resolution, closure,
   and reopening. Every mutation calls the complaint domain action.
