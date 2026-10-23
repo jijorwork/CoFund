@@ -5,6 +5,7 @@ use App\Domain\Backups\Services\StageEncryptedBackup;
 use App\Domain\Backups\Services\VerifyEncryptedBackup;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -22,6 +23,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
+    config()->set('database.default', 'sqlite');
     unlink($this->backupSource);
     if (is_dir($this->backupTarget)) {
         app(Filesystem::class)->deleteDirectory($this->backupTarget);
@@ -77,12 +79,67 @@ test('recovery stages a consistent snapshot and private files without overwritin
     expect(file_get_contents($this->backupTarget.'/storage/member-documents/proof.txt'))->toBe('original-document');
 });
 
+test('MySQL backup uses a private credentials file and stages a verified SQL dump', function () {
+    config()->set('database.default', 'mysql');
+    config()->set('database.connections.mysql', [
+        'driver' => 'mysql',
+        'host' => '127.0.0.1',
+        'port' => '3306',
+        'database' => 'cofund_backup_test',
+        'username' => 'backup_user',
+        'password' => 'private-mysql-password',
+        'unix_socket' => '',
+    ]);
+    config()->set('cofund.backups.mysqldump_binary', 'mysqldump');
+    $observedCredentials = null;
+    Process::fake(function ($process) use (&$observedCredentials) {
+        $command = $process->command;
+        $credentialsPath = substr($command[1], strlen('--defaults-extra-file='));
+        $observedCredentials = file_get_contents($credentialsPath);
+        expect(fileperms($credentialsPath) & 0777)->toBe(0600)
+            ->and($command)->toContain('--single-transaction', '--quick', '--routines', '--triggers', '--events', '--set-gtid-purged=OFF')
+            ->not->toContain('private-mysql-password');
+        $resultPath = substr(collect($command)->first(fn ($argument) => str_starts_with($argument, '--result-file=')), strlen('--result-file='));
+        file_put_contents($resultPath, 'CREATE TABLE backup_probe (value TEXT);');
+
+        return Process::result();
+    });
+
+    $path = app(CreateEncryptedBackup::class)->handle();
+    $manifest = app(VerifyEncryptedBackup::class)->handle($path);
+    app(StageEncryptedBackup::class)->handle($path, $this->backupTarget);
+
+    expect($manifest['database_driver'])->toBe('mysql')
+        ->and($manifest['files'])->toHaveKey('database.sql')
+        ->and(file_get_contents($this->backupTarget.'/database.sql'))->toBe('CREATE TABLE backup_probe (value TEXT);')
+        ->and($observedCredentials)->toContain('password="private-mysql-password"');
+    Process::assertRan(fn ($process) => $process->command[0] === 'mysqldump');
+    config()->set('database.default', 'sqlite');
+});
+
+test('failed MySQL dump leaves no stored backup', function () {
+    config()->set('database.default', 'mysql');
+    config()->set('database.connections.mysql', [
+        'driver' => 'mysql',
+        'host' => '127.0.0.1',
+        'port' => '3306',
+        'database' => 'cofund_backup_test',
+        'username' => 'backup_user',
+        'password' => 'private-mysql-password',
+        'unix_socket' => '',
+    ]);
+    Process::fake(['*' => Process::result(exitCode: 1)]);
+
+    expect(fn () => app(CreateEncryptedBackup::class)->handle())->toThrow(RuntimeException::class, 'MySQL database snapshot failed.');
+    expect(Storage::disk('local')->files('backups'))->toBeEmpty();
+});
+
 test('backup creation refuses a missing password and unsupported database driver', function () {
     config()->set('cofund.backups.password', null);
     expect(fn () => app(CreateEncryptedBackup::class)->handle())->toThrow(RuntimeException::class);
 
     config()->set('cofund.backups.password', str_repeat('long-secret-', 4));
-    config()->set('database.default', 'mysql');
+    config()->set('database.default', 'pgsql');
     expect(fn () => app(CreateEncryptedBackup::class)->handle())->toThrow(RuntimeException::class);
     config()->set('database.default', 'sqlite');
 });

@@ -91,13 +91,15 @@ class StageEncryptedBackup
                     $archive->close();
                 }
 
-                $database = new SQLite3($targetDirectory.'/database.sqlite', SQLITE3_OPEN_READONLY);
-                try {
-                    if ($database->querySingle('PRAGMA integrity_check') !== 'ok') {
-                        throw new RuntimeException('Recovered SQLite snapshot failed integrity check.');
+                if ($manifest['database_driver'] === 'sqlite') {
+                    $database = new SQLite3($targetDirectory.'/database.sqlite', SQLITE3_OPEN_READONLY);
+                    try {
+                        if ($database->querySingle('PRAGMA integrity_check') !== 'ok') {
+                            throw new RuntimeException('Recovered SQLite snapshot failed integrity check.');
+                        }
+                    } finally {
+                        $database->close();
                     }
-                } finally {
-                    $database->close();
                 }
                 $manifestPath = $targetDirectory.'/recovery-manifest.json';
                 if (file_put_contents($manifestPath, json_encode($manifest, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)) === false) {

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Backups\Services;
 
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use SQLite3;
@@ -17,13 +18,9 @@ class CreateEncryptedBackup
         if (strlen($password) < 32) {
             throw new RuntimeException('Configure a backup password of at least 32 characters.');
         }
-        if (config('database.default') !== 'sqlite') {
+        $driver = (string) config('database.default');
+        if (! in_array($driver, ['sqlite', 'mysql'], true)) {
             throw new RuntimeException('The configured database driver is not supported by this backup command.');
-        }
-
-        $databasePath = realpath((string) config('database.connections.sqlite.database'));
-        if ($databasePath === false || ! is_file($databasePath)) {
-            throw new RuntimeException('A file-backed SQLite database is required for backup.');
         }
 
         $temporaryDirectory = sys_get_temp_dir().'/cofund-backup-'.bin2hex(random_bytes(12));
@@ -32,16 +29,12 @@ class CreateEncryptedBackup
         }
 
         try {
-            $snapshotPath = $temporaryDirectory.'/database.sqlite';
-            $source = new SQLite3($databasePath, SQLITE3_OPEN_READONLY);
-            $destination = new SQLite3($snapshotPath, SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
-            try {
-                if (! $source->backup($destination)) {
-                    throw new RuntimeException('SQLite snapshot failed.');
-                }
-            } finally {
-                $destination->close();
-                $source->close();
+            $databaseEntry = $driver === 'sqlite' ? 'database.sqlite' : 'database.sql';
+            $snapshotPath = $temporaryDirectory.'/'.$databaseEntry;
+            if ($driver === 'sqlite') {
+                $this->snapshotSqlite($snapshotPath);
+            } else {
+                $this->snapshotMysql($snapshotPath, $temporaryDirectory);
             }
 
             $archivePath = $temporaryDirectory.'/backup.zip';
@@ -51,7 +44,7 @@ class CreateEncryptedBackup
             }
             $archive->setPassword($password);
             try {
-                $files = ['database.sqlite' => $snapshotPath];
+                $files = [$databaseEntry => $snapshotPath];
                 $localDisk = Storage::disk('local');
                 $root = realpath($localDisk->path(''));
                 if ($root === false) {
@@ -81,7 +74,7 @@ class CreateEncryptedBackup
                 $manifest = json_encode([
                     'format' => 'cofund-backup-v1',
                     'created_at' => now()->utc()->toIso8601String(),
-                    'database_driver' => 'sqlite',
+                    'database_driver' => $driver,
                     'files' => $manifestFiles,
                 ], JSON_THROW_ON_ERROR);
                 if (! $archive->addFromString('manifest.json', $manifest) || ! $archive->setEncryptionName('manifest.json', ZipArchive::EM_AES_256)) {
@@ -116,6 +109,73 @@ class CreateEncryptedBackup
                 unlink($file);
             }
             rmdir($temporaryDirectory);
+        }
+    }
+
+    private function snapshotSqlite(string $snapshotPath): void
+    {
+        $databasePath = realpath((string) config('database.connections.sqlite.database'));
+        if ($databasePath === false || ! is_file($databasePath)) {
+            throw new RuntimeException('A file-backed SQLite database is required for backup.');
+        }
+        $source = new SQLite3($databasePath, SQLITE3_OPEN_READONLY);
+        $destination = new SQLite3($snapshotPath, SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
+        try {
+            if (! $source->backup($destination)) {
+                throw new RuntimeException('SQLite snapshot failed.');
+            }
+        } finally {
+            $destination->close();
+            $source->close();
+        }
+    }
+
+    private function snapshotMysql(string $snapshotPath, string $temporaryDirectory): void
+    {
+        $connection = config('database.connections.mysql');
+        if (! is_array($connection) || ! empty($connection['url'])) {
+            throw new RuntimeException('MySQL backup requires explicit connection settings.');
+        }
+        $database = (string) ($connection['database'] ?? '');
+        $username = (string) ($connection['username'] ?? '');
+        $password = (string) ($connection['password'] ?? '');
+        $host = (string) ($connection['host'] ?? '');
+        $socket = (string) ($connection['unix_socket'] ?? '');
+        $port = (string) ($connection['port'] ?? '3306');
+        foreach ([$database, $username, $password, $host, $socket, $port] as $value) {
+            if (str_contains($value, "\n") || str_contains($value, "\r")) {
+                throw new RuntimeException('MySQL backup connection settings are invalid.');
+            }
+        }
+        if ($database === '' || $username === '' || ($host === '' && $socket === '') || ! ctype_digit($port)) {
+            throw new RuntimeException('MySQL backup connection settings are incomplete.');
+        }
+
+        $credentialsPath = $temporaryDirectory.'/mysql-client.cnf';
+        $quote = static fn (string $value): string => '"'.str_replace(['\\', '"'], ['\\\\', '\\"'], $value).'"';
+        $settings = "[client]\nuser=".$quote($username)."\npassword=".$quote($password)."\n";
+        $settings .= $socket !== '' ? 'socket='.$quote($socket)."\n" : 'host='.$quote($host)."\nport=".$port."\n";
+        if (file_put_contents($credentialsPath, $settings) === false || ! chmod($credentialsPath, 0600)) {
+            throw new RuntimeException('Unable to prepare private MySQL backup credentials.');
+        }
+
+        $result = Process::timeout(1800)->run([
+            (string) config('cofund.backups.mysqldump_binary'),
+            '--defaults-extra-file='.$credentialsPath,
+            '--single-transaction',
+            '--quick',
+            '--routines',
+            '--triggers',
+            '--events',
+            '--hex-blob',
+            '--no-tablespaces',
+            '--set-gtid-purged=OFF',
+            '--default-character-set=utf8mb4',
+            '--result-file='.$snapshotPath,
+            $database,
+        ]);
+        if (! $result->successful() || ! is_file($snapshotPath) || filesize($snapshotPath) === 0) {
+            throw new RuntimeException('MySQL database snapshot failed.');
         }
     }
 }

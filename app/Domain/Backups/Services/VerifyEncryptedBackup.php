@@ -57,7 +57,7 @@ class VerifyEncryptedBackup
                 }
                 $manifest = json_decode($rawManifest, true, flags: JSON_THROW_ON_ERROR);
                 if (! is_array($manifest) || ($manifest['format'] ?? null) !== 'cofund-backup-v1'
-                    || ($manifest['database_driver'] ?? null) !== 'sqlite'
+                    || ! in_array($manifest['database_driver'] ?? null, ['sqlite', 'mysql'], true)
                     || ! is_string($manifest['created_at'] ?? null) || ! is_array($manifest['files'] ?? null)) {
                     throw new RuntimeException('Backup manifest is invalid.');
                 }
@@ -66,7 +66,7 @@ class VerifyEncryptedBackup
                 }
                 $verifiedFiles = [];
                 foreach ($manifest['files'] as $name => $expected) {
-                    if (! is_string($name) || ! preg_match('/\A(?:database\.sqlite|storage\/(?!backups\/)(?:[a-zA-Z0-9._-]+\/)*[a-zA-Z0-9._-]+)\z/', $name)
+                    if (! is_string($name) || ! preg_match('/\A(?:database\.(?:sqlite|sql)|storage\/(?!backups\/)(?:[a-zA-Z0-9._-]+\/)*[a-zA-Z0-9._-]+)\z/', $name)
                         || ! is_array($expected) || ! is_string($expected['sha256'] ?? null) || ! is_int($expected['bytes'] ?? null)) {
                         throw new RuntimeException('Backup manifest contains an invalid entry.');
                     }
@@ -96,14 +96,16 @@ class VerifyEncryptedBackup
                     }
                     $verifiedFiles[$name] = ['sha256' => $expected['sha256'], 'bytes' => $expected['bytes']];
                 }
-                if (! array_key_exists('database.sqlite', $manifest['files'])) {
+                $databaseEntry = $manifest['database_driver'] === 'sqlite' ? 'database.sqlite' : 'database.sql';
+                if (! array_key_exists($databaseEntry, $manifest['files'])
+                    || array_key_exists($databaseEntry === 'database.sqlite' ? 'database.sql' : 'database.sqlite', $manifest['files'])) {
                     throw new RuntimeException('Backup database snapshot is missing.');
                 }
 
                 return [
                     'format' => 'cofund-backup-v1',
                     'created_at' => $manifest['created_at'],
-                    'database_driver' => 'sqlite',
+                    'database_driver' => $manifest['database_driver'],
                     'files' => $verifiedFiles,
                 ];
             } finally {
