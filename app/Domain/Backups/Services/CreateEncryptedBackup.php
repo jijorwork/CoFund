@@ -90,7 +90,7 @@ class CreateEncryptedBackup
                 throw new RuntimeException('Unable to read the backup archive.');
             }
             try {
-                if (! Storage::disk((string) config('cofund.backups.disk'))->put($backupPath, $stream)) {
+                if (! Storage::disk((string) config('cofund.backups.disk'))->put($backupPath, $stream, 'private')) {
                     throw new RuntimeException('Unable to store the encrypted backup.');
                 }
             } finally {

@@ -60,6 +60,18 @@ return [
             'report' => false,
         ],
 
+        'cofund-backups' => [
+            'driver' => 's3',
+            'key' => env('COFUND_BACKUP_AWS_ACCESS_KEY_ID'),
+            'secret' => env('COFUND_BACKUP_AWS_SECRET_ACCESS_KEY'),
+            'region' => env('COFUND_BACKUP_AWS_DEFAULT_REGION'),
+            'bucket' => env('COFUND_BACKUP_AWS_BUCKET'),
+            'endpoint' => env('COFUND_BACKUP_AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('COFUND_BACKUP_AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
     ],
 
     /*

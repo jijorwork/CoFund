@@ -168,6 +168,24 @@ test('recovery rejects encrypted archive entries with traversal segments', funct
     expect(is_dir($this->backupTarget))->toBeFalse();
 });
 
+test('retention keeps seven newest archives and removes only expired older archives', function () {
+    for ($number = 0; $number < 10; $number++) {
+        $path = sprintf('backups/archive-%02d.zip', $number);
+        Storage::disk('local')->put($path, 'archive');
+        touch(Storage::disk('local')->path($path), now()->subDays($number < 8 ? 40 : 2)->timestamp + $number);
+    }
+    expect(Artisan::call('cofund:backup:prune'))->toBe(0)
+        ->and(Storage::disk('local')->files('backups'))->toHaveCount(7)
+        ->and(Storage::disk('local')->exists('backups/archive-00.zip'))->toBeFalse()
+        ->and(Storage::disk('local')->exists('backups/archive-07.zip'))->toBeTrue();
+});
+
+test('weekly recovery check stages and cleans a verified latest backup', function () {
+    app(CreateEncryptedBackup::class)->handle();
+    expect(Artisan::call('cofund:backup:verify-latest'))->toBe(0)
+        ->and(Artisan::output())->toContain('Latest backup verified and staged:');
+});
+
 test('backup creation refuses a missing password and unsupported database driver', function () {
     config()->set('cofund.backups.password', null);
     expect(fn () => app(CreateEncryptedBackup::class)->handle())->toThrow(RuntimeException::class);
