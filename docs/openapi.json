@@ -3,7 +3,7 @@
     "info": {
         "title": "CoFund API",
         "version": "1.0.0",
-        "description": "The generated contract for CoFund API v1. Business operations require a verified user session and active organisation/role context."
+        "description": "The generated contract for CoFund API v1. Session routes require an active organisation and role context. External read routes require a bearer token fixed to an organisation, branch, and role."
     },
     "servers": [
         {
@@ -26,6 +26,9 @@
         },
         {
             "name": "Expenses"
+        },
+        {
+            "name": "External"
         },
         {
             "name": "Identity"
@@ -282,6 +285,157 @@
                 "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\AuthContextController@index",
                 "x-cofund-tenant-context": false,
                 "x-cofund-role-context": false,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/tokens": {
+            "get": {
+                "tags": [
+                    "Identity"
+                ],
+                "summary": "Auth Tokens Index",
+                "operationId": "auth_tokens_index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.auth.tokens.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ExternalTokenController@index",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Identity"
+                ],
+                "summary": "Auth Tokens Store",
+                "operationId": "auth_tokens_store",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.auth.tokens.store",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ExternalTokenController@store",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/tokens/{tokenUuid}": {
+            "delete": {
+                "tags": [
+                    "Identity"
+                ],
+                "summary": "Auth Tokens Destroy",
+                "operationId": "auth_tokens_destroy",
+                "parameters": [
+                    {
+                        "name": "tokenUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OrganisationContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/BranchContext"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.auth.tokens.destroy",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ExternalTokenController@destroy",
+                "x-cofund-tenant-context": true,
+                "x-cofund-role-context": true,
                 "security": [
                     {
                         "cookieAuth": []
@@ -5205,6 +5359,179 @@
                 "security": [
                     {
                         "cookieAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/context": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Context",
+                "operationId": "external_context",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.context",
+                "x-cofund-action": "Closure",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/dashboard": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Dashboard",
+                "operationId": "external_dashboard",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.dashboard",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\DashboardController@organisation",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/members": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Members Index",
+                "operationId": "external_members_index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.members.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\MemberController@index",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/members/{memberUuid}": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Members Show",
+                "operationId": "external_members_show",
+                "parameters": [
+                    {
+                        "name": "memberUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.members.show",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\MemberController@show",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -21165,6 +21492,12 @@
                 "in": "cookie",
                 "name": "cofund-session",
                 "description": "First-party Fortify web session. State-changing requests also require CSRF protection."
+            },
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "Sanctum",
+                "description": "Read-only token fixed to one organisation, branch, and role assignment."
             }
         },
         "parameters": {

@@ -25,6 +25,8 @@ everywhere. Database uniqueness remains the final concurrent race guard.
 The repository defaults to SQLite (`DB_CONNECTION=sqlite`); database-backed cache, queue, and session are the local defaults. Laravel configurations for MySQL/MariaDB/PostgreSQL/SQL Server also exist. Tests explicitly use SQLite. Production database engine, collation, backup/restore policy, retention, and high-availability requirements require owner approval before schema work.
 
 The owner selected MySQL for production integration checks on 2026-10-23. The
+Sanctum token migration and focused token suite passed on an isolated MySQL
+database; the live CoFund database was not migrated for that check. The
 backup policy is daily AES-256 archives on the separately configured private
 `cofund-backups` S3-compatible disk,
 weekly verification and staging, and 30-day retention with at least seven

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Http\Middleware\ResolveRoleContext;
 use App\Http\Middleware\ResolveTenantContext;
+use App\Http\Middleware\ResolveTokenContext;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -94,7 +95,7 @@ class GenerateApiDocumentation extends Command
             'info' => [
                 'title' => 'CoFund API',
                 'version' => '1.0.0',
-                'description' => 'The generated contract for CoFund API v1. Business operations require a verified user session and active organisation/role context.',
+                'description' => 'The generated contract for CoFund API v1. Session routes require an active organisation and role context. External read routes require a bearer token fixed to an organisation, branch, and role.',
             ],
             'servers' => [
                 ['url' => '/api/v1', 'description' => 'Current host'],
@@ -129,6 +130,13 @@ class GenerateApiDocumentation extends Command
             'role.context',
             ResolveRoleContext::class,
         );
+        $tokenContext = $this->hasMiddleware(
+            $middleware,
+            'token.context',
+            ResolveTokenContext::class,
+        );
+        $bearerAuth = in_array('auth:sanctum', $middleware, true);
+        $authenticated = $authenticated || $bearerAuth;
         $routeName = $route->getName() ?? $route->uri();
         $responses = [
             '200' => ['$ref' => '#/components/responses/Success'],
@@ -140,7 +148,7 @@ class GenerateApiDocumentation extends Command
             $responses['401'] = ['$ref' => '#/components/responses/Unauthenticated'];
         }
 
-        if ($tenantContext || $roleContext) {
+        if ($tenantContext || $roleContext || $tokenContext) {
             $responses['403'] = ['$ref' => '#/components/responses/Forbidden'];
         }
 
@@ -162,8 +170,12 @@ class GenerateApiDocumentation extends Command
             'x-cofund-role-context' => $roleContext,
         ];
 
+        if ($tokenContext) {
+            $operation['x-cofund-token-context'] = true;
+        }
+
         if ($authenticated) {
-            $operation['security'] = [['cookieAuth' => []]];
+            $operation['security'] = [$bearerAuth ? ['bearerAuth' => []] : ['cookieAuth' => []]];
         }
 
         return $operation;
@@ -217,6 +229,12 @@ class GenerateApiDocumentation extends Command
                     'in' => 'cookie',
                     'name' => config('session.cookie', 'cofund_session'),
                     'description' => 'First-party Fortify web session. State-changing requests also require CSRF protection.',
+                ],
+                'bearerAuth' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'Sanctum',
+                    'description' => 'Read-only token fixed to one organisation, branch, and role assignment.',
                 ],
             ],
             'parameters' => [
@@ -352,17 +370,17 @@ class GenerateApiDocumentation extends Command
                 implode('|', $this->documentedMethods($route)),
                 $route->uri(),
                 $route->getName() ?? '—',
-                $this->yesNo($this->hasMiddleware(
+                $this->yesNo(in_array('auth:sanctum', $middleware, true) || $this->hasMiddleware(
                     $middleware,
                     'auth',
                     'Illuminate\Auth\Middleware\Authenticate',
                 )),
-                $this->yesNo($this->hasMiddleware(
+                $this->yesNo(in_array('token.context', $middleware, true) || $this->hasMiddleware(
                     $middleware,
                     'tenant.context',
                     ResolveTenantContext::class,
                 )),
-                $this->yesNo($this->hasMiddleware(
+                $this->yesNo(in_array('token.context', $middleware, true) || $this->hasMiddleware(
                     $middleware,
                     'role.context',
                     ResolveRoleContext::class,

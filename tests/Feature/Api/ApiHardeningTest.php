@@ -54,8 +54,15 @@ test('private api routes cannot lose authentication or context middleware', func
             continue;
         }
 
-        expect($middleware)
-            ->toContain('auth');
+        if (str_starts_with($uri, 'api/v1/external/')) {
+            expect($middleware)
+                ->toContain('auth:sanctum')
+                ->toContain('token.context');
+
+            continue;
+        }
+
+        expect($middleware)->toContain('auth');
 
         if (str_starts_with($uri, 'api/v1/auth/')) {
             continue;
@@ -94,6 +101,12 @@ test('generated OpenAPI contract covers every api v1 route and method', function
     );
 
     expect($document['openapi'])->toBe('3.1.0');
+    expect($document['paths']['/external/context']['get']['security'])
+        ->toBe([['bearerAuth' => []]]);
+    expect($document['paths']['/external/context']['get']['x-cofund-token-context'])
+        ->toBeTrue();
+    expect($document['paths']['/auth/tokens']['post']['security'])
+        ->toBe([['cookieAuth' => []]]);
 
     foreach (cofundApiRoutes() as $route) {
         $path = '/'.str_replace('api/v1/', '', $route->uri());

@@ -10,6 +10,7 @@ Artisan::command('inspire', function () {
 
 Schedule::command('notifications:send-digests')->everyMinute()->withoutOverlapping();
 Schedule::command('notifications:contribution-reminders')->hourly()->withoutOverlapping();
+Schedule::command('sanctum:prune-expired --hours=24')->daily()->withoutOverlapping();
 
 if (config('cofund.backups.scheduled')
     && config('cofund.backups.disk') === 'cofund-backups'

@@ -15,6 +15,7 @@ use App\Http\Middleware\AddApiSecurityHeaders;
 use App\Http\Middleware\EnsureApiRequestId;
 use App\Http\Middleware\ResolveRoleContext;
 use App\Http\Middleware\ResolveTenantContext;
+use App\Http\Middleware\ResolveTokenContext;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -45,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant.context' => ResolveTenantContext::class,
             'role.context' => ResolveRoleContext::class,
+            'token.context' => ResolveTokenContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

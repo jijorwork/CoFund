@@ -211,5 +211,10 @@ The registered Laravel route collection is the source for
 `php artisan api:documentation`. Automated tests enforce authentication,
 organisation context, and role context by route category. API v1 uses one named
 per-user/per-IP limiter, validated request correlation identifiers, standard
-JSON routing errors, and defensive response headers. External token
-authentication remains a separate owner-approved design decision.
+JSON routing errors, and defensive response headers. Organisation administrators
+can issue 1–90 day, read-only Sanctum tokens for their current organisation,
+branch, and role assignment through the session-protected token API. The raw
+token is returned only at creation. `/api/v1/external` verifies the stored
+context and current role access on every request; context headers cannot switch
+it. The external surface currently exposes context, dashboard, and member
+list/detail. Broader external operations remain pending.

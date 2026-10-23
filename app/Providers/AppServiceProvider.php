@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Domain\Expenses\Models\ExpenseRequest;
 use App\Domain\Expenses\Models\PettyCashAdvance;
+use App\Domain\Identity\Models\ContextualAccessToken;
 use App\Domain\Membership\Models\Member;
 use App\Domain\Membership\Models\MemberContact;
 use App\Domain\Notifications\Contracts\MessagingNotificationProvider;
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Sanctum::usePersonalAccessTokenModel(ContextualAccessToken::class);
+
         Relation::enforceMorphMap([
             'member' => Member::class,
             'member_contact' => MemberContact::class,

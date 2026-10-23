@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\V1\ExpenseDocumentController;
 use App\Http\Controllers\Api\V1\ExpensePaymentController;
 use App\Http\Controllers\Api\V1\ExpenseReportController;
 use App\Http\Controllers\Api\V1\ExpenseRequestController;
+use App\Http\Controllers\Api\V1\ExternalTokenController;
 use App\Http\Controllers\Api\V1\FinancialReportController;
 use App\Http\Controllers\Api\V1\FinancialTransactionController;
 use App\Http\Controllers\Api\V1\GroupController;
@@ -95,6 +96,17 @@ Route::prefix('v1')->name('api.v1.')->middleware('throttle:api')->group(function
         ->middleware('throttle:60,1')
         ->name('public.receipts.verify');
 
+    Route::prefix('external')->name('external.')->middleware(['auth:sanctum', 'token.context'])->group(function () {
+        Route::get('context', function (Request $request, TenantContext $tenantContext) {
+            return TenantContextResource::make($tenantContext)->additional([
+                'meta' => ['request_id' => ApiResponse::requestId($request)],
+            ]);
+        })->name('context');
+        Route::get('members', [MemberController::class, 'index'])->name('members.index');
+        Route::get('members/{memberUuid}', [MemberController::class, 'show'])->name('members.show');
+        Route::get('dashboard', [DashboardController::class, 'organisation'])->name('dashboard');
+    });
+
     Route::middleware(['web', 'auth'])->group(function () {
         Route::get('auth/contexts', [AuthContextController::class, 'index'])
             ->name('auth.contexts.index');
@@ -109,6 +121,10 @@ Route::prefix('v1')->name('api.v1.')->middleware('throttle:api')->group(function
             })->name('context');
 
             Route::middleware('role.context')->group(function () {
+                Route::get('auth/tokens', [ExternalTokenController::class, 'index'])->name('auth.tokens.index');
+                Route::post('auth/tokens', [ExternalTokenController::class, 'store'])->name('auth.tokens.store');
+                Route::delete('auth/tokens/{tokenUuid}', [ExternalTokenController::class, 'destroy'])->name('auth.tokens.destroy');
+
                 Route::get('complaints', [ComplaintCaseController::class, 'index'])->name('complaints.index');
                 Route::post('complaints', [ComplaintCaseController::class, 'store'])->name('complaints.store');
                 Route::get('complaints/{complaintUuid}', [ComplaintCaseController::class, 'show'])->name('complaints.show');
