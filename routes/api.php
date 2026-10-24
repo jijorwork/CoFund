@@ -105,6 +105,30 @@ Route::prefix('v1')->name('api.v1.')->middleware('throttle:api')->group(function
         Route::get('members', [MemberController::class, 'index'])->name('members.index');
         Route::get('members/{memberUuid}', [MemberController::class, 'show'])->name('members.show');
         Route::get('dashboard', [DashboardController::class, 'organisation'])->name('dashboard');
+        Route::get('groups', [GroupController::class, 'index'])->name('groups.index');
+        Route::get('groups/{groupUuid}', [GroupController::class, 'show'])->name('groups.show');
+        Route::get('groups/{groupUuid}/members', [GroupController::class, 'members'])->name('groups.members.index');
+        Route::get('contribution-plans', [ContributionPlanController::class, 'index'])->name('contribution-plans.index');
+        Route::get('contribution-plans/{contributionPlanUuid}', [ContributionPlanController::class, 'show'])->name('contribution-plans.show');
+        Route::get('contribution-enrolments', [ContributionEnrolmentController::class, 'index'])->name('contribution-enrolments.index');
+        Route::get('contribution-enrolments/{contributionEnrolmentUuid}', [ContributionEnrolmentController::class, 'show'])->name('contribution-enrolments.show');
+        Route::get('contribution-enrolments/{contributionEnrolmentUuid}/schedule', [ContributionScheduleController::class, 'index'])->name('contribution-enrolments.schedule.index');
+        Route::get('contribution-payments', [ContributionPaymentController::class, 'index'])->name('contribution-payments.index');
+        Route::get('contribution-payments/{paymentUuid}', [ContributionPaymentController::class, 'show'])->name('contribution-payments.show');
+        Route::get('wallets', [WalletController::class, 'index'])->name('wallets.index');
+        Route::get('wallets/{walletUuid}', [WalletController::class, 'show'])->name('wallets.show');
+        Route::get('wallets/{walletUuid}/balance', WalletBalanceController::class)->name('wallets.balance');
+        Route::get('wallets/{walletUuid}/statement', WalletStatementController::class)->name('wallets.statement');
+        Route::get('receipts', [ReceiptController::class, 'index'])->name('receipts.index');
+        Route::get('receipts/{receiptUuid}', [ReceiptController::class, 'show'])->name('receipts.show');
+        Route::get('receipts/{receiptUuid}/print-data', [ReceiptController::class, 'printData'])->name('receipts.print-data');
+        Route::get('reports/general-ledger', [FinancialReportController::class, 'generalLedger'])->name('reports.general-ledger');
+        Route::get('reports/trial-balance', [FinancialReportController::class, 'trialBalance'])->name('reports.trial-balance');
+        Route::get('reports/statement-of-financial-position', [FinancialReportController::class, 'financialPosition'])->name('reports.statement-of-financial-position');
+        Route::get('reports/income-and-expenditure', [FinancialReportController::class, 'incomeAndExpenditure'])->name('reports.income-and-expenditure');
+        Route::get('reports/cash-flow', [FinancialReportController::class, 'cashFlow'])->name('reports.cash-flow');
+        Route::get('audit-events', [AuditEventController::class, 'index'])->name('audit-events.index');
+        Route::get('audit-events/{auditEventUuid}', [AuditEventController::class, 'show'])->name('audit-events.show');
     });
 
     Route::middleware(['web', 'auth'])->group(function () {

@@ -20,7 +20,7 @@ class ExternalTokenController extends Controller
 {
     public function index(Request $request, RoleAuthorization $authorization, TenantContext $tenantContext): JsonResponse
     {
-        $authorization->authorize(FoundationPermission::RolesAssign->value);
+        $authorization->authorize(FoundationPermission::ApiTokensManage->value);
         $user = $request->user();
 
         if (! $user instanceof User) {
@@ -49,7 +49,7 @@ class ExternalTokenController extends Controller
         TenantContext $tenantContext,
         RoleAuthorization $authorization,
     ): JsonResponse {
-        $authorization->authorize(FoundationPermission::RolesAssign->value);
+        $authorization->authorize(FoundationPermission::ApiTokensManage->value);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'min:3', 'max:100'],
@@ -71,6 +71,7 @@ class ExternalTokenController extends Controller
                 'organisation_id' => $tenantContext->organisation()->getKey(),
                 'branch_id' => $tenantContext->branch()?->getKey(),
                 'role_assignment_id' => $tenantContext->roleAssignment()->getKey(),
+                'role_id' => $tenantContext->role()->getKey(),
             ]);
             $acting = ActingContext::from($user, $tenantContext);
             AuditEvent::query()->create([
@@ -108,7 +109,7 @@ class ExternalTokenController extends Controller
         TenantContext $tenantContext,
         string $tokenUuid,
     ): JsonResponse {
-        $authorization->authorize(FoundationPermission::RolesAssign->value);
+        $authorization->authorize(FoundationPermission::ApiTokensManage->value);
         $user = $request->user();
 
         if (! $user instanceof User) {

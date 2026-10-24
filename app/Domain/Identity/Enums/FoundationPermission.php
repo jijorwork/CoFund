@@ -14,6 +14,7 @@ enum FoundationPermission: string
     case RolesView = 'roles.view';
     case RolesAssign = 'roles.assign';
     case RolesRevoke = 'roles.revoke';
+    case ApiTokensManage = 'api_tokens.manage';
     case MembersView = 'members.view';
     case MembersCreate = 'members.create';
     case MembersUpdate = 'members.update';

@@ -5363,6 +5363,97 @@
                 ]
             }
         },
+        "/external/audit-events": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Audit Events Index",
+                "operationId": "external_audit_events_index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.audit-events.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\AuditEventController@index",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/audit-events/{auditEventUuid}": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Audit Events Show",
+                "operationId": "external_audit_events_show",
+                "parameters": [
+                    {
+                        "name": "auditEventUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.audit-events.show",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\AuditEventController@show",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/external/context": {
             "get": {
                 "tags": [
@@ -5404,6 +5495,329 @@
                 ]
             }
         },
+        "/external/contribution-enrolments": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Contribution Enrolments Index",
+                "operationId": "external_contribution_enrolments_index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.contribution-enrolments.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ContributionEnrolmentController@index",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/contribution-enrolments/{contributionEnrolmentUuid}": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Contribution Enrolments Show",
+                "operationId": "external_contribution_enrolments_show",
+                "parameters": [
+                    {
+                        "name": "contributionEnrolmentUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.contribution-enrolments.show",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ContributionEnrolmentController@show",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/contribution-enrolments/{contributionEnrolmentUuid}/schedule": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Contribution Enrolments Schedule Index",
+                "operationId": "external_contribution_enrolments_schedule_index",
+                "parameters": [
+                    {
+                        "name": "contributionEnrolmentUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.contribution-enrolments.schedule.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ContributionScheduleController@index",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/contribution-payments": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Contribution Payments Index",
+                "operationId": "external_contribution_payments_index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.contribution-payments.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ContributionPaymentController@index",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/contribution-payments/{paymentUuid}": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Contribution Payments Show",
+                "operationId": "external_contribution_payments_show",
+                "parameters": [
+                    {
+                        "name": "paymentUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.contribution-payments.show",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ContributionPaymentController@show",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/contribution-plans": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Contribution Plans Index",
+                "operationId": "external_contribution_plans_index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.contribution-plans.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ContributionPlanController@index",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/contribution-plans/{contributionPlanUuid}": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Contribution Plans Show",
+                "operationId": "external_contribution_plans_show",
+                "parameters": [
+                    {
+                        "name": "contributionPlanUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.contribution-plans.show",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ContributionPlanController@show",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/external/dashboard": {
             "get": {
                 "tags": [
@@ -5435,6 +5849,147 @@
                 },
                 "x-cofund-route-name": "api.v1.external.dashboard",
                 "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\DashboardController@organisation",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/groups": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Groups Index",
+                "operationId": "external_groups_index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.groups.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\GroupController@index",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/groups/{groupUuid}": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Groups Show",
+                "operationId": "external_groups_show",
+                "parameters": [
+                    {
+                        "name": "groupUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.groups.show",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\GroupController@show",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/groups/{groupUuid}/members": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Groups Members Index",
+                "operationId": "external_groups_members_index",
+                "parameters": [
+                    {
+                        "name": "groupUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.groups.members.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\GroupController@members",
                 "x-cofund-tenant-context": false,
                 "x-cofund-role-context": false,
                 "x-cofund-token-context": true,
@@ -5526,6 +6081,543 @@
                 },
                 "x-cofund-route-name": "api.v1.external.members.show",
                 "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\MemberController@show",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/receipts": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Receipts Index",
+                "operationId": "external_receipts_index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.receipts.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ReceiptController@index",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/receipts/{receiptUuid}": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Receipts Show",
+                "operationId": "external_receipts_show",
+                "parameters": [
+                    {
+                        "name": "receiptUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.receipts.show",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ReceiptController@show",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/receipts/{receiptUuid}/print-data": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Receipts Print Data",
+                "operationId": "external_receipts_print_data",
+                "parameters": [
+                    {
+                        "name": "receiptUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.receipts.print-data",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\ReceiptController@printData",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/reports/cash-flow": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Reports Cash Flow",
+                "operationId": "external_reports_cash_flow",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.reports.cash-flow",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\FinancialReportController@cashFlow",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/reports/general-ledger": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Reports General Ledger",
+                "operationId": "external_reports_general_ledger",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.reports.general-ledger",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\FinancialReportController@generalLedger",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/reports/income-and-expenditure": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Reports Income And Expenditure",
+                "operationId": "external_reports_income_and_expenditure",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.reports.income-and-expenditure",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\FinancialReportController@incomeAndExpenditure",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/reports/statement-of-financial-position": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Reports Statement Of Financial Position",
+                "operationId": "external_reports_statement_of_financial_position",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.reports.statement-of-financial-position",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\FinancialReportController@financialPosition",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/reports/trial-balance": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Reports Trial Balance",
+                "operationId": "external_reports_trial_balance",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.reports.trial-balance",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\FinancialReportController@trialBalance",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/wallets": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Wallets Index",
+                "operationId": "external_wallets_index",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.wallets.index",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\WalletController@index",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/wallets/{walletUuid}": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Wallets Show",
+                "operationId": "external_wallets_show",
+                "parameters": [
+                    {
+                        "name": "walletUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.wallets.show",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\WalletController@show",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/wallets/{walletUuid}/balance": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Wallets Balance",
+                "operationId": "external_wallets_balance",
+                "parameters": [
+                    {
+                        "name": "walletUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.wallets.balance",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\WalletBalanceController",
+                "x-cofund-tenant-context": false,
+                "x-cofund-role-context": false,
+                "x-cofund-token-context": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/external/wallets/{walletUuid}/statement": {
+            "get": {
+                "tags": [
+                    "External"
+                ],
+                "summary": "External Wallets Statement",
+                "operationId": "external_wallets_statement",
+                "parameters": [
+                    {
+                        "name": "walletUuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/RequestId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationError"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/RateLimited"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                },
+                "x-cofund-route-name": "api.v1.external.wallets.statement",
+                "x-cofund-action": "App\\Http\\Controllers\\Api\\V1\\WalletStatementController",
                 "x-cofund-tenant-context": false,
                 "x-cofund-role-context": false,
                 "x-cofund-token-context": true,

@@ -512,7 +512,16 @@ class SystemAuthorizationSeeder extends Seeder
             ...$this->notificationPermissionsFor($role),
             ...$this->filamentPermissionsFor($role),
             ...$this->complaintPermissionsFor($role),
+            ...$this->apiTokenPermissionsFor($role),
         ]));
+    }
+
+    /** @return list<string> */
+    private function apiTokenPermissionsFor(SystemRole $role): array
+    {
+        return in_array($role, [SystemRole::PlatformAdmin, SystemRole::Member], true)
+            ? []
+            : [FoundationPermission::ApiTokensManage->value];
     }
 
     /** @return list<string> */

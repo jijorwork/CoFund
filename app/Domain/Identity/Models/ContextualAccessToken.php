@@ -14,6 +14,7 @@ use Laravel\Sanctum\PersonalAccessToken;
     'organisation_id',
     'branch_id',
     'role_assignment_id',
+    'role_id',
 ])]
 class ContextualAccessToken extends PersonalAccessToken
 {

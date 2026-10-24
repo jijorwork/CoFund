@@ -29,6 +29,10 @@ class ResolveTokenContext
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (! $request->isMethodSafe()) {
+            return $this->forbidden($request);
+        }
+
         $user = $request->user();
         $token = $user instanceof User ? $user->currentAccessToken() : null;
 
@@ -48,6 +52,7 @@ class ResolveTokenContext
             $organisation === null
             || ($token->branch_id !== null && $branch === null)
             || $assignment === null
+            || $assignment->role_id !== $token->role_id
             || ! $this->checkAssignment->passes($assignment, $user, $organisation, $branch)
         ) {
             return $this->forbidden($request);

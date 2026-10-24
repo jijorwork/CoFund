@@ -76,6 +76,21 @@ test('private api routes cannot lose authentication or context middleware', func
     }
 });
 
+test('external bearer routes are read only mirrors of session read actions', function () {
+    foreach (cofundApiRoutes() as $route) {
+        $name = $route->getName();
+        if (! is_string($name) || ! str_starts_with($name, 'api.v1.external.')) {
+            continue;
+        }
+
+        expect(array_diff($route->methods(), ['GET', 'HEAD']))->toBeEmpty();
+        $sessionName = str_replace('api.v1.external.', 'api.v1.', $name);
+        $sessionRoute = RouteFacade::getRoutes()->getByName($sessionName);
+        expect($sessionRoute)->not->toBeNull()
+            ->and($route->getActionName())->toBe($sessionRoute->getActionName());
+    }
+});
+
 test('api routing errors use the standard error envelope', function () {
     $this->getJson('/api/v1/does-not-exist')
         ->assertNotFound()

@@ -29,10 +29,11 @@ and branch scope, and derive wallet positions from posted ledger entries.
 - All first-party business endpoints are rooted at `/api/v1`; route names use `api.v1.*`.
 - `php artisan api:documentation` regenerates the authoritative route inventory and OpenAPI 3.1 contract from Laravel's registered routes.
 - JSON is the only representation unless a dedicated export endpoint documents another type.
-- Current first-party API authentication uses Fortify's `web` session guard and CSRF protection. Token authentication for external clients remains undecided.
+- First-party API authentication uses Fortify's `web` session guard and CSRF protection. External read routes under `/api/v1/external` use Sanctum bearer tokens issued through session-protected `/api/v1/auth/tokens` endpoints. Tokens are fixed to one organisation, branch, and role assignment and expire within 1–90 days. A token issued before fixed-role binding was added must be reissued.
 - `GET /api/v1/auth/contexts` lists valid choices and `POST /api/v1/auth/context` selects exact organisation, optional branch, and assignment UUIDs. Body/query numeric ownership IDs never establish authority.
 - Staff routes run `web`, `auth`, tenant resolution, then role resolution. Health has no context middleware; context list/switch require authentication but no preselected role.
 - Every v1 route uses the named `api` rate limiter: 120 requests per minute by default, keyed by authenticated user or public IP.
+- Bearer routes reject context headers as authority and revalidate organisation access, branch status, role assignment, and the token's original role on every request. Only read methods are registered; controller permissions and tenant queries still apply.
 
 ## Responses
 

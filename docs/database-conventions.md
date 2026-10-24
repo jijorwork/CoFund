@@ -26,7 +26,9 @@ The repository defaults to SQLite (`DB_CONNECTION=sqlite`); database-backed cach
 
 The owner selected MySQL for production integration checks on 2026-10-23. The
 Sanctum token migration and focused token suite passed on an isolated MySQL
-database; the live CoFund database was not migrated for that check. The
+database; the additive fixed-role migration and expanded token suite passed on
+an isolated MySQL database on 2026-10-24. The live CoFund database was not
+migrated for those checks. The
 backup policy is daily AES-256 archives on the separately configured private
 `cofund-backups` S3-compatible disk, weekly verification, and 30-day retention
 with at least seven archives preserved. Scheduling stays disabled until the
