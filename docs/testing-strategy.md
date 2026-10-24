@@ -165,3 +165,15 @@ business routes, the named limiter applies globally, request IDs are sanitized,
 defensive headers are emitted, and routing failures retain the standard error
 envelope. The documentation generator is exercised and every registered method
 must appear in `docs/openapi.json`.
+
+## MySQL backup restore integration
+
+The opt-in `MysqlBackupRestoreIntegrationTest` requires a newly created, empty
+database whose name starts with `cofund_restore_suite_`. It creates a separate
+source database, dumps and encrypts it, deletes that source, imports the archive
+into a generated scratch database, checks tables and migration rows, and
+verifies scratch cleanup. Run it with `DB_CONNECTION=mysql`, the disposable
+`DB_DATABASE`, `COFUND_RUN_MYSQL_RESTORE_TEST=1`, and absolute
+`COFUND_MYSQLDUMP_BINARY` and `COFUND_RESTORE_MYSQL_BINARY` paths. Remove the
+disposable test database afterward. The configured CoFund database must not be
+used as the test database.

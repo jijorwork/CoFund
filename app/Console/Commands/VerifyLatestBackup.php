@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Backups\Services\ExerciseMysqlRestore;
 use App\Domain\Backups\Services\StageEncryptedBackup;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -11,10 +12,10 @@ use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 #[Signature('cofund:backup:verify-latest')]
-#[Description('Verify and stage the latest encrypted backup in a temporary recovery directory')]
+#[Description('Verify the latest backup, staging it or exercising a disposable MySQL restore')]
 class VerifyLatestBackup extends Command
 {
-    public function handle(StageEncryptedBackup $backups, Filesystem $files): int
+    public function handle(StageEncryptedBackup $backups, ExerciseMysqlRestore $mysqlRestore, Filesystem $files): int
     {
         $disk = Storage::disk((string) config('cofund.backups.disk'));
         $latest = collect($disk->files('backups'))
@@ -24,6 +25,13 @@ class VerifyLatestBackup extends Command
         if ($latest === null) {
             throw new RuntimeException('No backup archive is available.');
         }
+        if (config('cofund.backups.restore_mysql.enabled')) {
+            $result = $mysqlRestore->handle($latest);
+            $this->info(sprintf('Latest backup restored into disposable MySQL: %d tables and %d migration rows.', $result['tables'], $result['migration_rows']));
+
+            return self::SUCCESS;
+        }
+
         $target = sys_get_temp_dir().'/cofund-recovery-check-'.bin2hex(random_bytes(12));
         try {
             $backups->handle($latest, $target);

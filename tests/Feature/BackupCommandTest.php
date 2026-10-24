@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Backups\Services\CreateEncryptedBackup;
+use App\Domain\Backups\Services\ExerciseMysqlRestore;
 use App\Domain\Backups\Services\StageEncryptedBackup;
 use App\Domain\Backups\Services\VerifyEncryptedBackup;
 use Illuminate\Filesystem\Filesystem;
@@ -184,6 +185,128 @@ test('weekly recovery check stages and cleans a verified latest backup', functio
     app(CreateEncryptedBackup::class)->handle();
     expect(Artisan::call('cofund:backup:verify-latest'))->toBe(0)
         ->and(Artisan::output())->toContain('Latest backup verified and staged:');
+});
+
+test('weekly MySQL recovery exercise imports into a disposable database and removes it', function () {
+    config()->set('database.default', 'mysql');
+    config()->set('database.connections.mysql', [
+        'driver' => 'mysql',
+        'host' => '127.0.0.1',
+        'port' => '3306',
+        'database' => 'cofund_backup_source',
+        'username' => 'backup_user',
+        'password' => 'source-password',
+        'unix_socket' => '',
+    ]);
+    config()->set('cofund.backups.restore_mysql', [
+        'enabled' => true,
+        'binary' => 'mysql',
+        'host' => '127.0.0.1',
+        'port' => '3306',
+        'unix_socket' => '',
+        'username' => 'restore_user',
+        'password' => 'restore-password',
+    ]);
+    $commands = [];
+    Process::preventStrayProcesses();
+    Process::fake(function ($process) use (&$commands) {
+        $command = $process->command;
+        $commands[] = $command;
+        if ($command[0] === 'mysqldump') {
+            $resultPath = substr(collect($command)->first(fn ($argument) => str_starts_with($argument, '--result-file=')), strlen('--result-file='));
+            file_put_contents($resultPath, 'CREATE TABLE migrations (id INT); CREATE TABLE users (id INT); CREATE TABLE organisations (id INT);');
+
+            return Process::result();
+        }
+        $credentialsPath = substr($command[1], strlen('--defaults-extra-file='));
+        expect(fileperms($credentialsPath) & 0777)->toBe(0600)
+            ->and(file_get_contents($credentialsPath))->toContain('password="restore-password"')
+            ->and($command)->not->toContain('restore-password');
+        if (str_contains(implode(' ', $command), 'information_schema.tables')
+            || str_contains(implode(' ', $command), 'SELECT COUNT(*) FROM migrations')) {
+            return Process::result(output: "3\n");
+        }
+
+        return Process::result();
+    });
+
+    app(CreateEncryptedBackup::class)->handle();
+    expect(Artisan::call('cofund:backup:verify-latest'))->toBe(0)
+        ->and(Artisan::output())->toContain('Latest backup restored into disposable MySQL: 3 tables and 3 migration rows.');
+
+    $create = collect($commands)->first(fn (array $command): bool => str_contains(implode(' ', $command), 'CREATE DATABASE'));
+    $import = collect($commands)->first(fn (array $command): bool => collect($command)->contains(fn (string $part): bool => str_starts_with($part, '--database=cofund_restore_')));
+    $drop = collect($commands)->first(fn (array $command): bool => str_contains(implode(' ', $command), 'DROP DATABASE'));
+    expect($create)->not->toBeNull()
+        ->and($import)->not->toBeNull()
+        ->and($drop)->not->toBeNull()
+        ->and($create[count($create) - 1])->toContain('cofund_restore_')
+        ->and($drop[count($drop) - 1])->toContain('cofund_restore_');
+});
+
+test('MySQL restore exercise refuses missing dedicated restore configuration', function () {
+    config()->set('database.default', 'mysql');
+    config()->set('database.connections.mysql', [
+        'driver' => 'mysql', 'host' => '127.0.0.1', 'port' => '3306',
+        'database' => 'cofund_backup_source', 'username' => 'backup_user',
+        'password' => 'source-password', 'unix_socket' => '',
+    ]);
+    Process::fake(function ($process) {
+        $command = $process->command;
+        $resultPath = substr(collect($command)->first(fn ($argument) => str_starts_with($argument, '--result-file=')), strlen('--result-file='));
+        file_put_contents($resultPath, 'CREATE TABLE migrations (id INT);');
+
+        return Process::result();
+    });
+    $path = app(CreateEncryptedBackup::class)->handle();
+
+    expect(fn () => app(ExerciseMysqlRestore::class)->handle($path))
+        ->toThrow(RuntimeException::class, 'A dedicated MySQL restore connection is required.');
+});
+
+test('failed MySQL import still drops the disposable database and private staging directory', function () {
+    config()->set('database.default', 'mysql');
+    config()->set('database.connections.mysql', [
+        'driver' => 'mysql', 'host' => '127.0.0.1', 'port' => '3306',
+        'database' => 'cofund_backup_source', 'username' => 'backup_user',
+        'password' => 'source-password', 'unix_socket' => '',
+    ]);
+    config()->set('cofund.backups.restore_mysql', [
+        'enabled' => true, 'binary' => 'mysql', 'host' => '127.0.0.1',
+        'port' => '3306', 'unix_socket' => '', 'username' => 'restore_user',
+        'password' => 'restore-password',
+    ]);
+    $dropped = false;
+    $stagingDirectory = null;
+    Process::preventStrayProcesses();
+    Process::fake(function ($process) use (&$dropped, &$stagingDirectory) {
+        $command = $process->command;
+        if ($command[0] === 'mysqldump') {
+            $resultPath = substr(collect($command)->first(fn ($argument) => str_starts_with($argument, '--result-file=')), strlen('--result-file='));
+            file_put_contents($resultPath, 'CREATE TABLE migrations (id INT);');
+
+            return Process::result();
+        }
+
+        $stagingDirectory = dirname(substr($command[1], strlen('--defaults-extra-file=')));
+        if (str_contains(implode(' ', $command), 'DROP DATABASE')) {
+            $dropped = true;
+
+            return Process::result();
+        }
+        if (collect($command)->contains(fn (string $part): bool => str_starts_with($part, '--database=cofund_restore_'))
+            && ! collect($command)->contains(fn (string $part): bool => str_starts_with($part, '--execute='))) {
+            return Process::result(exitCode: 1);
+        }
+
+        return Process::result();
+    });
+
+    $path = app(CreateEncryptedBackup::class)->handle();
+    expect(fn () => app(ExerciseMysqlRestore::class)->handle($path))
+        ->toThrow(RuntimeException::class, 'The disposable MySQL restore failed.');
+    expect($dropped)->toBeTrue()
+        ->and(is_dir($stagingDirectory))->toBeFalse();
 });
 
 test('backup creation refuses a missing password and unsupported database driver', function () {

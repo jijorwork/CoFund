@@ -28,11 +28,15 @@ The owner selected MySQL for production integration checks on 2026-10-23. The
 Sanctum token migration and focused token suite passed on an isolated MySQL
 database; the live CoFund database was not migrated for that check. The
 backup policy is daily AES-256 archives on the separately configured private
-`cofund-backups` S3-compatible disk,
-weekly verification and staging, and 30-day retention with at least seven
-archives preserved. Scheduling stays disabled until the independent disk and a
-32-character or longer secret are configured. A disposable-database MySQL
-restore exercise is still required before production rollout.
+`cofund-backups` S3-compatible disk, weekly verification, and 30-day retention
+with at least seven archives preserved. Scheduling stays disabled until the
+independent disk and a 32-character or longer secret are configured. When a
+dedicated restore MySQL connection is enabled, the weekly check imports the
+latest dump into a randomly named scratch database, verifies core tables and
+migration rows, and removes the scratch database. The real MySQL dump and
+restore path passed an isolated integration test on 2026-10-24. Production
+rollout still requires offsite credentials, a dedicated restore server and
+account with create/drop privileges, and an operator review of recovery time.
 
 ## Identifiers
 
